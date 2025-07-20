@@ -1,0 +1,48 @@
+# GraphIT/docker-compose.yml
+
+# Verze syntaxe Docker Compose. Doporučuje se verze 3.8 nebo novější.
+version: '3.8'
+
+# Definice služeb (kontejnerů), které tvoří vaši aplikaci
+services:
+  # Služba pro databázi PostgreSQL
+  db:
+    image: postgres:13-alpine # Použijeme oficiální obraz PostgreSQL verze 13
+    restart: always            # Zajistí, že se kontejner restartuje v případě selhání
+    environment:               # Proměnné prostředí pro konfiguraci PostgreSQL
+      POSTGRES_DB: graphit_db  # Název databáze
+      POSTGRES_USER: user      # Uživatelské jméno pro přístup k databázi
+      POSTGRES_PASSWORD: password # Heslo pro přístup k databázi (v produkci použijte .env soubor!)
+    ports:                     # Mapování portů: HOST_PORT:CONTAINER_PORT
+      - "5432:5432"            # Port 5432 na hostu bude mapován na port 5432 v kontejneru db
+    volumes:                   # Trvalé ukládání dat databáze
+      - db_data:/var/lib/postgresql/data # Data budou uložena ve volume 'db_data'
+
+  # Služba pro backend (FastAPI)
+  backend:
+    build: ./backend           # Docker bude hledat Dockerfile v adresáři './backend'
+    ports:                     # Mapování portů: HOST_PORT:CONTAINER_PORT
+      - "8000:8000"            # Port 8000 na hostu bude mapován na port 8000 v kontejneru backend
+    volumes:                   # Mapování adresářů: HOST_PATH:CONTAINER_PATH
+      - ./backend:/app         # Kód z hosta bude synchronizován s /app v kontejneru (dobré pro vývoj)
+    depends_on:                # Zajistí, že 'db' služba bude spuštěna před 'backend'
+      - db
+    environment:               # Proměnné prostředí pro backend
+      DATABASE_URL: postgresql://user:password@db:5432/graphit_db # URL pro připojení k databázi
+      # Host 'db' je název služby databáze definované v docker-compose.yml
+
+  # Služba pro frontend (React)
+  frontend:
+    build: ./frontend          # Docker bude hledat Dockerfile v adresáři './frontend'
+    ports:                     # Mapování portů: HOST_PORT:CONTAINER_PORT
+      - "3000:3000"            # Port 3000 na hostu bude mapován na port 3000 v kontejneru frontend
+    volumes:                   # Mapování adresářů: HOST_PATH:CONTAINER_PATH
+      - ./frontend:/app        # Kód z hosta bude synchronizován s /app v kontejneru
+      - /app/node_modules      # Důležité: zabrání přepsání složky node_modules z kontejneru hostem
+                               # To zajistí, že Node.js závislosti zůstanou uvnitř kontejneru
+    depends_on:                # Zajistí, že 'backend' služba bude spuštěna před 'frontend'
+      - backend
+
+# Definice pojmenovaných volumes pro trvalé ukládání dat
+volumes:
+  db_data: # Toto volume bude použito pro data PostgreSQL databáze

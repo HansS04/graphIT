@@ -1,0 +1,8 @@
+# GraphIT_app/backend/requirements.txt
+
+fastapi
+uvicorn            # Server pro spouštění FastAPI aplikace
+pandas             # Knihovna pro manipulaci s daty
+sqlalchemy         # ORM (Object-Relational Mapper) pro interakci s databází
+psycopg2-binary    # PostgreSQL adaptér pro Python
+python-multipart   # Potřebné pro zpracování formulářů a nahrávání souborů (později)
