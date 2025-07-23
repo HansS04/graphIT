@@ -46,4 +46,4 @@ def get_data():
     # df = DataFrame({'col1': [1, 2], 'col2': [3, 4]})
     # return df.to_dict(orient='records') # Příklad vrácení dat z Pandas DataFrame
 
-    return {"data": "This is some data from backend (soon with Pandas!)."}
+    return {"data": "This is some data from backend (soon with Pandas!) cego."}
