@@ -5,6 +5,17 @@
 @tailwind utilities;
 
 
+.graphit-logo{
+  height: 150px; /* Výška loga */
+}
+
+.graphit-logo-mini{
+  height: 100px; /* Výška mini loga */
+}
+.extra-margin-nav {
+  margin-left: 20%; /* Přidání extra mezery nahoře */
+  margin-right: 20%;
+}
 .text-graphit-white {
   color: #ffffff; /* Bílá barva pro text */
 }

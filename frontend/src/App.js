@@ -1,73 +1,91 @@
-// GraphIT_app/frontend/src/App.js
-
 import React, { useState, useEffect } from 'react';
-import './index.css';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar'; // <-- Importujte novou Sidebar komponentu
+import Sidebar from './components/Sidebar';
+import Home from './components/Home';
+import About from './components/About';
+import Login from './components/Login';
+import AdminDashboard from './components/AdminDashboard';
+import UserDashboard from './components/UserDashboard';
+import { fetchCurrentUser } from './api';
+import  Footer  from './components/Footer'
 
 function App() {
-  const [backendMessage, setBackendMessage] = useState('');
-  const [backendData, setBackendData] = useState('');
-  const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const checkUser = async () => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      try {
+        const userData = await fetchCurrentUser(token);
+        setUser(userData);
+      } catch (error) {
+        console.error('Nepodařilo se načíst uživatele:', error);
+        localStorage.removeItem('access_token');
+        setUser(null);
+      }
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    // Volání základního endpointu backendu
-    fetch('http://localhost:8000/')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => setBackendMessage(data.message))
-      .catch(err => {
-        console.error("Chyba při volání základního endpointu backendu:", err);
-        setError("Nepodařilo se připojit k backendu.");
-      });
-
-    // Volání endpointu /api/data
-    fetch('http://localhost:8000/api/data')
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => setBackendData(JSON.stringify(data)))
-      .catch(err => {
-        console.error("Chyba při volání /api/data:", err);
-        setError("Nepodařilo se načíst data z backendu.");
-      });
-
+    checkUser();
   }, []);
 
-  return (
-    <div className="flex flex-col min-h-screen bg-gray-100">
-      <Navbar /> {/* Hlavní navigační lišta nahoře */}
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    setUser(null);
+    window.location.reload(); 
+  };
 
-      {/* Hlavní obsah s bočním menu */}
-      <div className="flex flex-1"> {/* flex-1 zajistí, že tato sekce vyplní zbývající výšku */}
-        <Sidebar /> {/* Levý postranní panel s widgety */}
-
-        {/* Hlavní pracovní plocha - zde bude dashboard atd. */}
-        <main className="flex-grow p-6"> {/* flex-grow zajistí, že vyplní zbytek šířky */}
-          <h1 className="text-4xl font-bold text-blue-600 mb-8">
-            Vítejte v GraphIT App!
-          </h1>
-          {error && <p className="text-red-500 text-lg mb-4">{error}</p>}
-
-          <div className="bg-white p-6 rounded-lg shadow-md mb-4 w-full max-w-md">
-            <h2 className="text-2xl font-semibold mb-2 text-gray-800">Zpráva z backendu:</h2>
-            <p className="text-lg text-gray-700">{backendMessage || 'Načítám zprávu...'}</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-            <h2 className="text-2xl font-semibold mb-2 text-gray-800">Data z backendu (/api/data):</h2>
-            <p className="text-lg text-gray-700">{backendData || 'Načítám data...'}</p>
-          </div>
-        </main>
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-graphit-dark-blue text-graphit-white">
+        Načítám...
       </div>
-    </div>
+    );
+  }
+
+  return (
+    <Router>
+      {user ? (
+        // UŽIVATEL JE PŘIHLÁŠEN: Zobrazíme dashboardový layout
+        <div className="flex flex-col min-h-screen">
+          
+               <div className='bg-graphit-dark-blue'>
+            <Navbar user={user} onLogout={handleLogout} />
+        </div>
+          <div className="flex flex-1">
+            <Sidebar user={user} />
+            <main className="flex-grow">
+              <Routes>
+                <Route path="/dashboard" element={<UserDashboard user={user} />} />
+                <Route path="/admin" element={<AdminDashboard user={user} />} />
+                <Route path="*" element={<Navigate to="/dashboard" />} />
+              </Routes>
+            </main>
+          </div>
+          <Footer />
+        </div>
+      ) : (
+        // UŽIVATEL NENÍ PŘIHLÁŠEN: Zobrazíme homepage layout
+        <div className="flex flex-col min-h-screen ">
+        <div className='bg-graphit-dark-blue'>
+            <Navbar user={user} onLogout={handleLogout} />
+        </div>
+          <div className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/login" element={<Login onLoginSuccess={checkUser} />} />
+              <Route path="*" element={<Navigate to="/login" />} />
+            </Routes>
+          </div>
+          <Footer />
+        </div>
+      )}
+    </Router>
   );
 }
 
