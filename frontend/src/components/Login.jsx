@@ -19,16 +19,27 @@ const Login = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="flex items-start justify-center  bg-text-graphit-white p-12">
-      <form onSubmit={handleSubmit} className="bg-graphit-light-blue p-8 rounded-lg shadow-xl w-full max-w-sm">
-        <h2 className="text-3xl font-bold mb-6 text-center text-graphit-white">Přihlášení</h2>
-        {error && <div className="bg-red-600 text-white px-4 py-3 rounded relative mb-4">{error}</div>}
-        <div className="mb-4">
-          <label className="block text-graphit-white text-sm font-bold mb-2" htmlFor="email">
+    <div className="w-full h-full flex items-center justify-center p-4">
+      <form 
+        onSubmit={handleSubmit} 
+        className="w-full max-w-md bg-graphit-gray border border-graphit-gray-dark p-8 rounded-lg shadow-2xl"
+      >
+        <h2 className="text-3xl font-bold mb-8 text-center text-text-graphit-white">
+          Login
+        </h2>
+        
+        {error && (
+          <div className="bg-red-500/20 border border-red-500 text-red-100 px-4 py-3 rounded relative mb-6 text-sm">
+            {error}
+          </div>
+        )}
+
+        <div className="mb-6">
+          <label className="block text-text-graphit-white text-sm font-bold mb-2" htmlFor="email">
             Email
           </label>
           <input
-            className="shadow appearance-none border-2 border-graphit-light-blue rounded w-full py-2 px-3 text-graphit-dark-blue leading-tight focus:outline-none focus:shadow-outline"
+            className="w-full bg-graphit-gray-dark text-text-graphit-white placeholder-graphit-gray-light border border-graphit-gray-dark rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-graphit-turquoise focus:border-transparent transition-all"
             id="email"
             type="email"
             placeholder="vas.email@priklad.cz"
@@ -36,12 +47,13 @@ const Login = ({ onLoginSuccess }) => {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div className="mb-6">
-          <label className="block text-graphit-white text-sm font-bold mb-2" htmlFor="password">
-            Heslo
+
+        <div className="mb-8">
+          <label className="block text-text-graphit-white text-sm font-bold mb-2" htmlFor="password">
+            Password
           </label>
           <input
-            className="shadow appearance-none border-2 border-graphit-light-blue rounded w-full py-2 px-3 text-graphit-dark-blue mb-3 leading-tight focus:outline-none focus:shadow-outline"
+            className="w-full bg-graphit-gray-dark text-text-graphit-white placeholder-graphit-gray-light border border-graphit-gray-dark rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-graphit-turquoise focus:border-transparent transition-all"
             id="password"
             type="password"
             placeholder="******************"
@@ -49,9 +61,10 @@ const Login = ({ onLoginSuccess }) => {
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
+
         <div className="flex items-center justify-between">
           <button
-            className="bg-graphit-turquoise hover:bg-graphit-gold text-graphit-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors duration-300"
+            className="w-full bg-graphit-turquoise hover:bg-graphit-gold text-text-graphit-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition-colors duration-300 shadow-lg"
             type="submit"
           >
             Přihlásit se
