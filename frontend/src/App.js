@@ -56,7 +56,7 @@ function App() {
                <div className='bg-graphit-dark-blue'>
             <Navbar user={user} onLogout={handleLogout} />
         </div>
-          <div className="flex flex-1">
+          <div className="flex flex-1 blender-grid-bg">
             <Sidebar user={user} />
             <main className="flex-grow">
               <Routes>

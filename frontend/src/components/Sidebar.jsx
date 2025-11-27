@@ -3,18 +3,15 @@
 import React from 'react';
 
 function Sidebar({ user }) {
-  // Zde můžete definovat typy widgetů, které budou dostupné
   const widgets = [
     { id: 'metric-card', name: 'Karta Metrik', description: 'Základní ukazatel.' },
     { id: 'line-chart', name: 'Čárový Graf', description: 'Vývoj v čase.' },
     { id: 'bar-chart', name: 'Sloupcový Graf', description: 'Porovnání kategorií.' },
     { id: 'pie-chart', name: 'Koláčový Graf', description: 'Podíly celku.' },
     { id: 'simulation-form', name: 'Simulační Formulář', description: 'What-if analýza.' },
-    // Další widgety, např. text, tabulka, atd.
   ];
 
   return (
-    // Sidebar: pevná šířka, tmavé pozadí ladící s navbarem
     <aside className=" w-64 bg-graphit-dark-blue p-6 flex flex-col shadow-lg">
       <h2 className="text-graphit-white text-2xl font-semibold mb-6">
         Widgety pro Dashboard

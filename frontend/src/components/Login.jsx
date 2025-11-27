@@ -19,7 +19,6 @@ const Login = ({ onLoginSuccess }) => {
   };
 
   return (
-    // Změníme items-center na items-start a přidáme p-12 pro posun shora
     <div className="flex items-start justify-center  bg-text-graphit-white p-12">
       <form onSubmit={handleSubmit} className="bg-graphit-light-blue p-8 rounded-lg shadow-xl w-full max-w-sm">
         <h2 className="text-3xl font-bold mb-6 text-center text-graphit-white">Přihlášení</h2>
