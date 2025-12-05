@@ -11,6 +11,7 @@ const CATEGORIES = [
       </svg>
     ),
     items: [
+      { type: 'CONTROLS', label: 'Přepínač Trhů', icon: '🎛️' },
       { type: 'KPI', label: 'Karta Metrik', icon: '★' },
       { type: 'TABLE', label: 'Tabulka Dat', icon: '▤' }
     ]
@@ -24,8 +25,7 @@ const CATEGORIES = [
       </svg>
     ),
     items: [
-      { type: 'CHART', label: 'Čárový Graf', icon: '📈' },
-      { type: 'BAR', label: 'Sloupcový Graf', icon: '📊' },
+      { type: 'CHART', label: 'Svíčkový Graf', icon: '📈' },
     ]
   },
   {
@@ -56,7 +56,7 @@ function Sidebar() {
   const currentItems = CATEGORIES.find(c => c.id === activeCategory)?.items || [];
 
   return (
-    <div className="flex shadow-xl z-30 relative">
+    <div className="flex h-full shadow-xl z-30 relative">
       <div className="w-20 h-full bg-graphit-dark-blue flex flex-col items-center py-6 gap-6 border-r border-graphit-gray-dark z-40">
         {CATEGORIES.map((cat) => (
           <button

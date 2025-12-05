@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { DashboardProvider } from './context/DashboardContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Home from './components/Home';
@@ -43,7 +44,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-graphit-dark-blue text-graphit-white">
+      <div className="flex justify-center items-center h-screen bg-graphit-dark-blue text-graphit-white">
         Načítám...
       </div>
     );
@@ -53,28 +54,36 @@ function App() {
     <DndProvider backend={HTML5Backend}>
       <Router>
         {user ? (
-          <div className="flex flex-col min-h-screen">
-            <div className='bg-graphit-dark-blue'>
+          <div className="flex flex-col h-screen overflow-hidden bg-graphit-dark-blue">
+            <div className='shrink-0 z-50'>
               <Navbar user={user} onLogout={handleLogout} />
             </div>
-            <div className="flex flex-1 blender-grid-bg flex-row items-stretch relative z-10">
+
+            <div className="flex flex-1 overflow-hidden blender-grid-bg relative z-10">
               <Sidebar user={user} />
-              <main className="flex-grow overflow-hidden">
-                <Routes>
-                  <Route path="/dashboard" element={<UserDashboard user={user} />} />
-                  <Route path="/admin" element={<AdminDashboard user={user} />} />
-                  <Route path="*" element={<Navigate to="/dashboard" />} />
-                </Routes>
+              
+              <main className="flex-1 overflow-y-auto relative">
+                <DashboardProvider>
+                  <Routes>
+                    <Route path="/dashboard" element={<UserDashboard user={user} />} />
+                    <Route path="/admin" element={<AdminDashboard user={user} />} />
+                    <Route path="*" element={<Navigate to="/dashboard" />} />
+                  </Routes>
+                </DashboardProvider>
               </main>
             </div>
-            <Footer />
+            
+            <div className='shrink-0 z-50'>
+              <Footer />
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col min-h-screen bg-graphit-dark-blue">
-            <div className='bg-graphit-dark-blue z-20 relative'>
+          <div className="flex flex-col h-screen overflow-hidden bg-graphit-dark-blue">
+            <div className='shrink-0 z-50 relative'>
               <Navbar user={user} onLogout={handleLogout} />
             </div>
-            <div className="flex-grow flex flex-col blender-grid-bg relative z-10 overflow-hidden">
+            
+            <div className="flex-1 flex flex-col blender-grid-bg relative z-10 overflow-y-auto">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
@@ -82,7 +91,8 @@ function App() {
                 <Route path="*" element={<Navigate to="/login" />} />
               </Routes>
             </div>
-            <div className="z-20 relative">
+            
+            <div className="shrink-0 z-50 relative">
               <Footer />
             </div>
           </div>

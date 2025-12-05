@@ -1,16 +1,21 @@
 # Přejdeme na plnou, stabilnější Debian image
-FROM python:3.9 
+FROM python:3.9
 
+# Nastavíme pracovní adresář
 WORKDIR /app
 
+# Nejdříve zkopírujeme requirements (kvůli cachování vrstev Dockeru)
 COPY requirements.txt .
 
-# Instalace Python balíčků. Většina nativních rozšíření se teď nainstaluje bez problémů.
-# Pokud by přesto psycopg2-binary vyžadoval libpq-dev, stačí přidat:
-# RUN apt-get update && apt-get install -y libpq-dev 
+# Instalace závislostí
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./app /app
+# Zkopírujeme VŠE ze složky backend (tedy složku 'app', případně 'storage', atd.)
+COPY . .
+
+# Pokud chcete mít jistotu, že složka storage existuje (volitelné, Python to udělá taky)
+# RUN mkdir -p storage
 
 # Spouštěcí příkaz
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Pozor: Protože jsme zkopírovali vše, cesta k modulu je stále 'app.main:app'
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
