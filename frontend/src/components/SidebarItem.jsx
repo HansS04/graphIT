@@ -2,10 +2,9 @@ import React from 'react';
 import { useDrag } from 'react-dnd';
 
 const SidebarItem = ({ type, label, icon }) => {
-  // Hook useDrag nám umožní element "chytit"
   const [{ isDragging }, drag] = useDrag(() => ({
-    type: 'WIDGET', // Identifikátor typu přetahovaného prvku
-    item: { type }, // Data, která se přenáší (tady jen typ widgetu, např. 'KPI')
+    type: 'WIDGET', 
+    item: { type }, 
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
@@ -18,7 +17,7 @@ const SidebarItem = ({ type, label, icon }) => {
         flex items-center gap-3 p-3 rounded-lg cursor-grab 
         bg-graphit-gray-dark border border-graphit-gray-dark 
         hover:border-graphit-turquoise hover:bg-graphit-gray
-        transition-all duration-200
+        transition-all duration-200 select-none active:cursor-grabbing
         ${isDragging ? 'opacity-50' : 'opacity-100'}
       `}
     >

@@ -1,13 +1,15 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { useDrop } from 'react-dnd';
 import WidgetWrapper from './WidgetWrapper';
+import { useDashboardState } from '../context/DashboardContext';
 
 const UserDashboard = ({ user }) => {
-  const [widgets, setWidgets] = useState([]);
+  const { 
+    widgets, addWidget, removeWidget, updateWidgetSize, moveWidget, isLocked 
+  } = useDashboardState();
 
-  // Drop zóna pro NOVÉ widgety z menu
   const [{ isOver, draggedItemType }, drop] = useDrop(() => ({
-    accept: 'WIDGET', 
+    accept: 'WIDGET', // Přijímáme nové widgety z menu
     drop: (item) => addWidget(item.type),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
@@ -15,85 +17,62 @@ const UserDashboard = ({ user }) => {
     }),
   }));
 
-  const addWidget = (type) => {
-    setWidgets((prev) => [
-      ...prev,
-      { id: Date.now(), type, cols: 1, rows: 1 } 
-    ]);
-  };
-
-  const removeWidget = (id) => {
-    setWidgets((prev) => prev.filter((w) => w.id !== id));
-  };
-
-  const updateWidgetSize = (id, newCols, newRows) => {
-    setWidgets((prev) => prev.map((w) => {
-      if (w.id === id) {
-        const safeCols = Math.max(1, Math.min(3, newCols));
-        const safeRows = Math.max(1, Math.min(2, newRows));
-        return { ...w, cols: safeCols, rows: safeRows };
-      }
-      return w;
-    }));
-  };
-
-  // Přesouvání widgetů (Reorder)
-  const moveWidget = useCallback((dragIndex, hoverIndex) => {
-    setWidgets((prevWidgets) => {
-      const newWidgets = [...prevWidgets];
-      const [draggedWidget] = newWidgets.splice(dragIndex, 1);
-      newWidgets.splice(hoverIndex, 0, draggedWidget);
-      return newWidgets;
-    });
-  }, []);
-
   return (
     <div 
       ref={drop} 
-      className="w-full h-full p-8 overflow-y-auto transition-colors duration-300" 
-      // ZDE BYLA ZMĚNA: Odstraněno podmíněné 'bg-graphit-light-blue/5'
+      className="w-full h-full p-8 overflow-y-auto blender-grid-bg transition-colors duration-300"
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1600px] mx-auto pb-40">
         
-        {/* Hlavička */}
-        <div className="bg-graphit-gray border border-graphit-gray-dark p-6 rounded-lg shadow-lg mb-8">
-            <h1 className="text-2xl font-bold text-text-graphit-white">Můj Dashboard</h1>
-            <p className="text-graphit-gray-light">Vítejte, {user?.email}</p>
+        {/* HLAVIČKA */}
+        <div className="bg-graphit-gray border border-graphit-gray-dark p-6 rounded-lg shadow-lg mb-8 flex justify-between items-center relative z-20">
+            <div>
+                <h1 className="text-2xl font-bold text-text-graphit-white">Můj Dashboard</h1>
+                <p className="text-graphit-gray-light">Vítejte, {user?.email}</p>
+            </div>
+            {isLocked && (
+                <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">
+                    🔒 Read-Only
+                </div>
+            )}
         </div>
 
-        {/* Mřížka widgetů */}
+        {/* MŘÍŽKA WIDGETŮ */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-min pb-8">
             
             {widgets.map((widget, index) => (
               <WidgetWrapper 
                 key={widget.id} 
-                index={index}
+                index={index} 
                 id={widget.id} 
                 type={widget.type} 
-                cols={widget.cols}
+                cols={widget.cols} 
                 rows={widget.rows}
+                data={widget.data} // Data widgetu (např. symbol pro graf)
                 onRemove={removeWidget} 
-                onResize={updateWidgetSize}
+                onResize={updateWidgetSize} 
                 onMove={moveWidget}
                 isPlaceholder={false}
+                isLocked={isLocked}
               />
             ))}
-
-            {/* Stín pro NOVÉ widgety z menu (jen když táhnu z menu) */}
+            
+            {/* Stín pro NOVÉ widgety z menu */}
             {isOver && draggedItemType && draggedItemType !== 'DASHBOARD_ITEM' && (
               <WidgetWrapper 
                 id="placeholder-new"
                 type={draggedItemType}
-                cols={1} rows={1}
+                cols={draggedItemType === 'CHART' ? 2 : 1} 
+                rows={draggedItemType === 'CHART' ? 2 : 1}
                 isPlaceholder={true}
                 onRemove={()=>{}} onResize={()=>{}} onMove={()=>{}}
               />
             )}
-
+            
             {widgets.length === 0 && !isOver && (
-               <div className="col-span-full border-2 border-dashed border-graphit-gray-dark rounded-xl h-64 flex flex-col items-center justify-center text-graphit-gray-light">
+               <div className="col-span-full border-2 border-dashed border-graphit-gray-dark rounded-xl h-64 flex flex-col items-center justify-center text-graphit-gray-light bg-graphit-dark-blue/20">
                  <span className="text-4xl mb-2">👋</span>
-                 <p>Zatím tu nic není.</p>
+                 <p>Začněte přetažením widgetů z levého menu.</p>
                </div>
             )}
         </div>

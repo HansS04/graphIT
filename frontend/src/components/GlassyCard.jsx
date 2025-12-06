@@ -20,7 +20,7 @@ function GlassyCard({ children, className = '' }) {
         ${className}                // Umožňuje přidat nebo přepsat vlastní Tailwind třídy z rodičovské komponenty.
       `}
     >
-      {children} {/* Zde se vykreslí jakýkoli obsah, který obalíte GlassyCard */}
+      {children}
     </div>
   );
 }

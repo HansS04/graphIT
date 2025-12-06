@@ -23,16 +23,14 @@ function DraggableDashboardWidget({ id, type, content }) {
       `}
     >
       <GlassyCard>
-        <h3 className="text-xl font-bold mb-2 text-graphit-light-blue">{type}</h3> {/* Text nadpisu widgetu */}
-        <p className="text-text-graphit-white">{content}</p> {/* Obsah widgetu */}
-        {/* Zde byste vykresloval skutečný obsah widgetu podle jeho typu */}
+        <h3 className="text-xl font-bold mb-2 text-graphit-light-blue">{type}</h3>
+        <p className="text-text-graphit-white">{content}</p>
         {type === 'Karta Metrik' && (
           <div className="mt-2 text-sm text-graphit-yellow">Placeholder pro metriku.</div> 
         )}
         {type === 'Čárový Graf' && (
           <div className="mt-2 text-sm text-graphit-orange">Placeholder pro graf.</div>
         )}
-        {/* ... další typy widgetů ... */}
       </GlassyCard>
     </div>
   );
