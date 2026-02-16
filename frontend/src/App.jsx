@@ -8,6 +8,7 @@ import Sidebar from './components/Sidebar';
 import Home from './components/Home';
 import About from './components/About';
 import Login from './components/Login';
+import Register from './components/Register';
 import AdminDashboard from './components/AdminDashboard';
 import UserDashboard from './components/UserDashboard';
 import { fetchCurrentUser } from './api';
@@ -41,6 +42,8 @@ function App() {
 
   if (loading) return <div className="flex justify-center items-center h-screen bg-graphit-dark-blue text-graphit-white">Načítám...</div>;
 
+  const isAdmin = user?.role?.toLowerCase() === 'admin';
+
   return (
     <DndProvider backend={HTML5Backend}>
       <Router>
@@ -53,8 +56,16 @@ function App() {
                 <main className="flex-1 overflow-y-auto relative">
                     <Routes>
                       <Route path="/dashboard" element={<UserDashboard user={user} />} />
-                      <Route path="/admin" element={<AdminDashboard user={user} />} />
-                      <Route path="*" element={<Navigate to="/dashboard" />} />
+                      
+                      <Route 
+                        path="/admin" 
+                        element={isAdmin ? <AdminDashboard user={user} /> : <Navigate to="/dashboard" />} 
+                      />
+                      
+                      <Route 
+                        path="*" 
+                        element={<Navigate to={isAdmin ? "/admin" : "/dashboard"} />} 
+                      />
                     </Routes>
                 </main>
               </div>
@@ -69,6 +80,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/login" element={<Login onLoginSuccess={checkUser} />} />
+                <Route path="/register" element={<Register />} />
                 <Route path="*" element={<Navigate to="/login" />} />
               </Routes>
             </div>
@@ -79,4 +91,5 @@ function App() {
     </DndProvider>
   );
 }
+
 export default App;

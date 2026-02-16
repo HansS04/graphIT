@@ -1,6 +1,3 @@
-
-
-
 export const login = async (email, password) => {
   const formData = new URLSearchParams();
   formData.append('username', email);

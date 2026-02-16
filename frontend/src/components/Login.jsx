@@ -69,6 +69,7 @@ const Login = ({ onLoginSuccess }) => {
           >
             Přihlásit se
           </button>
+       
         </div>
       </form>
     </div>

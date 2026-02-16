@@ -8,10 +8,10 @@ from datetime import timedelta
 import pandas as pd
 import os
 import glob
+import numpy as np
 
 app = FastAPI()
 
-# --- KONFIGURACE ---
 origins = ["http://localhost", "http://localhost:3000"]
 app.add_middleware(
     CORSMiddleware,
@@ -23,21 +23,12 @@ app.add_middleware(
 
 scheduler = BackgroundScheduler()
 
-# --- DATOVÁ PIPELINE (ETL) ---
-
 def import_csv_to_db(db: Session, file_path: str, symbol: str, interval: str):
-    """
-    Načte CSV se svíčkami (Klines), zkontroluje duplicity a uloží nové do DB.
-    """
     filename = os.path.basename(file_path)
     try:
-        # Načtení CSV (Binance formát bez hlavičky)
         df = pd.read_csv(file_path, names=["Open Time", "Open", "High", "Low", "Close", "Volume", "Close Time", "Q", "N", "TB", "TQ", "I"])
-        
-        # Konverze času z mikrosekund na sekundy
         df["open_time"] = df["Open Time"] // 1000000
         
-        # Získáme existující časy z DB pro tento symbol (pro rychlou kontrolu duplicit)
         existing_times = set(
             t[0] for t in db.query(models.MarketData.open_time)
             .filter(models.MarketData.symbol == symbol, models.MarketData.interval == interval)
@@ -45,17 +36,11 @@ def import_csv_to_db(db: Session, file_path: str, symbol: str, interval: str):
         )
         
         inserted_count = 0
-        skipped_count = 0
-        
         for _, row in df.iterrows():
             t = int(row["open_time"])
-            
-            # Pokud čas v DB už je, přeskočíme ho
             if t in existing_times:
-                skipped_count += 1
                 continue
 
-            # Pokud není, vložíme ho
             db_item = models.MarketData(
                 symbol=symbol, 
                 interval=interval, 
@@ -70,48 +55,32 @@ def import_csv_to_db(db: Session, file_path: str, symbol: str, interval: str):
             inserted_count += 1
         
         db.commit()
-        
-        # Logování výsledku
         if inserted_count > 0:
-            print(f"✅ [{symbol}] {filename}: Nahráno {inserted_count} nových svíček. (Přeskočeno {skipped_count} duplicit)")
-        elif skipped_count > 0:
-            print(f"⚠️ [{symbol}] {filename}: Všechna data ({skipped_count}) už v DB jsou. Nic nového.")
+            print(f"[{symbol}] {filename}: Imported {inserted_count} new candles.")
             
     except Exception as e:
-        print(f"❌ [{symbol}] {filename}: Chyba importu: {e}")
+        print(f"[{symbol}] {filename}: Import error: {e}")
         db.rollback()
 
 def scan_and_import_data():
-    """
-    Inteligentní skenování storage.
-    Hledá CSV v podsložkách, detekuje symboly a ignoruje 'trades'.
-    """
     storage_dirs = ["storage", "/app/storage", "../storage"]
     storage_dir = None
     for path in storage_dirs:
         if os.path.exists(path):
             storage_dir = path
             break
-    if not storage_dir: 
-        # print("Storage nenalezena.")
-        return
+    if not storage_dir: return
 
-    # Rekurzivní hledání všech CSV
     csv_files = glob.glob(os.path.join(storage_dir, "**", "*.csv"), recursive=True)
     
-    if not csv_files:
-        return
+    if not csv_files: return
 
     db = database.SessionLocal()
     try:
         for file_path in csv_files:
             filename = os.path.basename(file_path).upper()
-            
-            # 1. FILTRACE: Ignorujeme soubory s obchody (trades)
-            if "TRADE" in filename:
-                continue
+            if "TRADE" in filename: continue
 
-            # 2. DETEKCE SYMBOLU
             symbol = "UNKNOWN"
             possible_symbols = ["BTCEUR", "ETHEUR", "ETCEUR", "SOLEUR", "ADAEUR", "BTCUSD", "ETHUSD", "SOLUSD", "ADAUSD", "BTCUSDT", "ETHUSDT", "SOLUSDT"]
             
@@ -123,28 +92,21 @@ def scan_and_import_data():
             
             if symbol == "UNKNOWN": continue
 
-            # 3. DETEKCE INTERVALU
-            interval = "1h" # Default
+            interval = "1h"
             if "1M" in filename and "1MO" not in filename: interval = "1m"
             elif "1D" in filename: interval = "1d"
             elif "15M" in filename: interval = "15m"
             elif "4H" in filename: interval = "4h"
             
-            # Spustíme import
             import_csv_to_db(db, file_path, symbol, interval)
-            
     finally:
         db.close()
-
-# --- STARTUP & SHUTDOWN ---
 
 @app.on_event("startup")
 def startup_event():
     models.Base.metadata.create_all(bind=database.engine)
-    # Spustit import pravidelně (60s)
     scheduler.add_job(scan_and_import_data, 'interval', seconds=60)
     scheduler.start()
-    # A také hned teď při startu
     scan_and_import_data()
 
 @app.on_event("shutdown")
@@ -155,8 +117,6 @@ def get_db():
     db = database.SessionLocal()
     try: yield db
     finally: db.close()
-
-# --- AUTH ---
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -189,15 +149,13 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 @app.get("/users/me", response_model=schemas.UserInDB)
 def read_users_me(current_user: models.User = Depends(get_current_user)):
-    return {"email": current_user.email, "role": current_user.role}
+    return current_user
 
 @app.get("/admin/panel")
 def admin_panel(current_user: models.User = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nemáte oprávnění.")
     return {"message": f"Vítejte v admin panelu, {current_user.email}!"}
-
-# --- PRESETS (DASHBOARDY) ---
 
 @app.post("/api/presets", response_model=schemas.Preset)
 def create_preset(preset: schemas.PresetCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
@@ -229,26 +187,15 @@ def delete_preset(preset_id: int, db: Session = Depends(get_db), current_user: m
     db.commit()
     return {"message": "Deleted"}
 
-# --- MARKET DATA API (Čtení z DB) ---
-
 @app.get("/api/market-data/{symbol}")
 def get_market_data(symbol: str, db: Session = Depends(get_db)):
-    """
-    Vrátí data pro graf přímo z DATABÁZE.
-    """
-    # Dotaz do DB, seřazeno podle času, filtrujeme natvrdo 1h (prozatím)
     data = db.query(models.MarketData).filter(
         models.MarketData.symbol == symbol,
         models.MarketData.interval == "1h" 
     ).order_by(models.MarketData.open_time.asc()).all()
     
-    # DEBUG VÝPIS: Uvidíte v terminálu, kolik dat se posílá
-    print(f"📊 API: Pro symbol {symbol} odesílám {len(data)} svíček.")
+    if not data: return []
 
-    if not data: 
-        return []
-
-    # Formátování pro frontend
     return [
         {
             "time": d.open_time,
@@ -260,3 +207,53 @@ def get_market_data(symbol: str, db: Session = Depends(get_db)):
         } 
         for d in data
     ]
+
+@app.get("/api/predict/{symbol}")
+def predict_price(symbol: str, days: int = 7, db: Session = Depends(get_db)):
+    history = db.query(models.MarketData).filter(
+        models.MarketData.symbol == symbol,
+        models.MarketData.interval == "1h"
+    ).order_by(models.MarketData.open_time.desc()).limit(500).all()
+
+    if not history or len(history) < 10:
+        raise HTTPException(status_code=404, detail="Nedostatek dat pro predikci")
+
+    history.reverse()
+    
+    close_prices = [d.close for d in history]
+    last_close = close_prices[-1]
+    last_time = history[-1].open_time
+
+    returns = np.diff(np.log(close_prices))
+    drift = np.mean(returns)
+    stdev = np.std(returns)
+
+    future_steps = days * 24 
+    
+    prediction_avg = []
+    prediction_bull = []
+    prediction_bear = []
+
+    current_avg = last_close
+    current_bull = last_close
+    current_bear = last_close
+    current_time = last_time
+
+    for _ in range(future_steps):
+        current_time += 3600
+        
+        current_avg = current_avg * (1 + drift)
+        current_bull = current_bull * (1 + drift + (stdev * 0.5))
+        current_bear = current_bear * (1 + drift - (stdev * 0.5))
+
+        prediction_avg.append({"time": current_time, "value": current_avg})
+        prediction_bull.append({"time": current_time, "value": current_bull})
+        prediction_bear.append({"time": current_time, "value": current_bear})
+
+    return {
+        "symbol": symbol,
+        "last_price": last_close,
+        "avg": prediction_avg,
+        "bull": prediction_bull,
+        "bear": prediction_bear
+    }

@@ -24,7 +24,6 @@ const UserDashboard = ({ user }) => {
     >
       <div className="max-w-[1600px] mx-auto pb-40">
         
-        {/* HLAVIČKA */}
         <div className="bg-graphit-gray border border-graphit-gray-dark p-6 rounded-lg shadow-lg mb-8 flex justify-between items-center relative z-20">
             <div>
                 <h1 className="text-2xl font-bold text-text-graphit-white">Můj Dashboard</h1>
@@ -37,7 +36,6 @@ const UserDashboard = ({ user }) => {
             )}
         </div>
 
-        {/* MŘÍŽKA WIDGETŮ */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-min pb-8">
             
             {widgets.map((widget, index) => (
@@ -48,7 +46,7 @@ const UserDashboard = ({ user }) => {
                 type={widget.type} 
                 cols={widget.cols} 
                 rows={widget.rows}
-                data={widget.data} // Data widgetu (např. symbol pro graf)
+                data={widget.data}
                 onRemove={removeWidget} 
                 onResize={updateWidgetSize} 
                 onMove={moveWidget}
@@ -57,7 +55,6 @@ const UserDashboard = ({ user }) => {
               />
             ))}
             
-            {/* Stín pro NOVÉ widgety z menu */}
             {isOver && draggedItemType && draggedItemType !== 'DASHBOARD_ITEM' && (
               <WidgetWrapper 
                 id="placeholder-new"

@@ -7,7 +7,6 @@ const SmartChartWidget = ({ symbol }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Počítadlo pro vynucení překreslení grafu
   const [forceFit, setForceFit] = useState(0);
 
   useEffect(() => {
@@ -15,15 +14,14 @@ const SmartChartWidget = ({ symbol }) => {
       setLoading(true);
       setError(null);
       try {
-        console.log(`🚀 Stahuji data pro: ${activeSymbol}`);
+        console.log(`Stahuji data pro: ${activeSymbol}`);
         const response = await fetch(`http://localhost:8000/api/market-data/${activeSymbol}`);
         
         if (!response.ok) throw new Error('Data nenalezena');
         
         const data = await response.json();
         
-        // DIAGNOSTIKA: Toto uvidíte v konzoli prohlížeče (F12 -> Console)
-        console.log(`✅ Přijato ${data.length} záznamů pro ${activeSymbol}`);
+        console.log(` Přijato ${data.length} záznamů pro ${activeSymbol}`);
         if (data.length > 0) {
             console.log("První datum:", new Date(data[0].time * 1000).toLocaleString());
             console.log("Poslední datum:", new Date(data[data.length - 1].time * 1000).toLocaleString());
@@ -52,18 +50,15 @@ const SmartChartWidget = ({ symbol }) => {
              <span className="text-graphit-turquoise text-xs ml-2">{chartData.length}h</span>
           </div>
       </div>
-
-      {/* TLAČÍTKO PRO VYNUCENÍ ZOOMU */}
       <button 
         onClick={() => setForceFit(prev => prev + 1)}
         className="absolute top-2 right-2 z-20 bg-graphit-gray border border-graphit-gray-dark hover:bg-graphit-light-blue text-white text-xs px-2 py-1 rounded transition-colors cursor-pointer"
         title="Zobrazit všechna data"
       >
-        🔍 Fit
+         Fit
       </button>
       
       <div className="flex-grow relative overflow-hidden">
-         {/* Předáváme forceFit, aby graf věděl, kdy se má resetovat */}
          <CandlestickChart data={chartData} forceFitTrigger={forceFit} />
       </div>
       

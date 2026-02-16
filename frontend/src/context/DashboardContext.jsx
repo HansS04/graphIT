@@ -8,28 +8,22 @@ export const DashboardProvider = ({ children }) => {
   const [presets, setPresets] = useState([]);
   const [currentPresetId, setCurrentPresetId] = useState(null);
   
-  // ZMĚNA: Načteme symbol z paměti prohlížeče, pokud tam je. Jinak default BTCEUR.
   const [symbol, setSymbol] = useState(() => {
     return localStorage.getItem('graphit_last_symbol') || 'BTCEUR';
   });
   
   const [isLocked, setIsLocked] = useState(false);
 
-  // Zbytek logiky (zámek, změny)...
   const toggleLock = () => setIsLocked(prev => !prev);
   const hasUnsavedChanges = useMemo(() => {
     if (!currentPresetId) return widgets.length > 0;
     return JSON.stringify(widgets) !== JSON.stringify(originalWidgets);
   }, [widgets, originalWidgets, currentPresetId]);
 
-  // ZMĚNA: Při změně symbolu ho uložíme do localStorage
   const updateSymbol = (newSymbol) => {
     setSymbol(newSymbol);
     localStorage.setItem('graphit_last_symbol', newSymbol);
   };
-
-  // ... (zbytek funkcí addWidget, removeWidget, api volání... beze změny) ...
-  // ... (prostě sem zkopírujte ty funkce z minulého souboru) ...
 
   const addWidget = (type) => {
     const newItem = { 
@@ -37,7 +31,7 @@ export const DashboardProvider = ({ children }) => {
         type, 
         cols: type === 'CHART' ? 2 : 1, 
         rows: type === 'CHART' ? 2 : 1,
-        data: { symbol: symbol } // Použije aktuálně vybraný symbol
+        data: { symbol: symbol }
     };
     setWidgets((prev) => [...prev, newItem]);
   };

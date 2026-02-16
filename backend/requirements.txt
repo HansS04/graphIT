@@ -6,4 +6,8 @@ python-jose[cryptography]
 passlib
 python-multipart
 pandas
+numpy
 apscheduler
+requests
+apscheduler
+email-validator

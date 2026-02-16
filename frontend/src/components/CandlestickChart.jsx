@@ -3,9 +3,8 @@ import { createChart, ColorType, CrosshairMode, CandlestickSeries, HistogramSeri
 
 const CandlestickChart = ({ data, forceFitTrigger }) => {
   const chartContainerRef = useRef();
-  const chartInstance = useRef(null); // Uložíme si instanci grafu
+  const chartInstance = useRef(null);
 
-  // 1. Inicializace grafu (při mountu nebo změně barev)
   useEffect(() => {
     if (!chartContainerRef.current) return;
 
@@ -26,7 +25,6 @@ const CandlestickChart = ({ data, forceFitTrigger }) => {
       rightPriceScale: { borderColor: '#4B5563', scaleMargins: { top: 0.1, bottom: 0.2 } },
     });
 
-    // Uložíme do refu pro pozdější použití
     chartInstance.current = chart;
 
     const volumeSeries = chart.addSeries(HistogramSeries, {
@@ -37,7 +35,6 @@ const CandlestickChart = ({ data, forceFitTrigger }) => {
       upColor: '#10B981', downColor: '#EF4444', borderDownColor: '#EF4444', borderUpColor: '#10B981', wickDownColor: '#EF4444', wickUpColor: '#10B981',
     });
 
-    // Nastavení dat
     if (data && data.length > 0) {
         candleSeries.setData(data);
         
@@ -47,7 +44,6 @@ const CandlestickChart = ({ data, forceFitTrigger }) => {
         });
         volumeSeries.setData(volumeData);
         
-        // DŮLEŽITÉ: Roztáhnout na celou šířku
         chart.timeScale().fitContent();
     }
 
@@ -69,9 +65,8 @@ const CandlestickChart = ({ data, forceFitTrigger }) => {
       chart.remove();
       chartInstance.current = null;
     };
-  }, [data]); // Re-init při změně dat
+  }, [data]);
 
-  // 2. Reakce na tlačítko "Fit"
   useEffect(() => {
     if (chartInstance.current && forceFitTrigger > 0) {
         chartInstance.current.timeScale().fitContent();

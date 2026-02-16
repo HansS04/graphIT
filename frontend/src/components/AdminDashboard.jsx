@@ -11,12 +11,42 @@ const AdminDashboard = ({ user }) => {
   return (
     <div className="w-full h-full p-6 text-text-graphit-white">
       
+      {/* HLAVNÍ NADPIS */}
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Admin Panel</h1>
         <button className="bg-graphit-turquoise hover:bg-green-600 text-white px-4 py-2 rounded shadow-lg transition-colors">
           + Přidat uživatele
         </button>
       </div>
+
+      {/* --- NOVÁ SEKCE: RYCHLÉ ODKAZY --- */}
+      <div className="bg-graphit-gray border border-graphit-gray-dark rounded-lg shadow-xl p-6 mb-8">
+        <h2 className="text-xl font-semibold mb-4 text-graphit-light-blue">Vývojářské nástroje</h2>
+        <div className="flex gap-4">
+          
+          {/* Odkaz na pgAdmin */}
+          <a 
+            href="http://localhost:5050" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-blue-600/20 border border-blue-500 hover:bg-blue-600 hover:text-white text-blue-400 font-medium px-4 py-2 rounded transition-colors"
+          >
+            <span>🗄️</span> pgAdmin (Databáze)
+          </a>
+
+          {/* Odkaz na Swagger (API Docs) */}
+          <a 
+            href="http://localhost:8000/docs" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 bg-green-600/20 border border-green-500 hover:bg-green-600 hover:text-white text-green-400 font-medium px-4 py-2 rounded transition-colors"
+          >
+            <span>📜</span> Swagger (API Dokumentace)
+          </a>
+
+        </div>
+      </div>
+      {/* --------------------------------- */}
 
       {/* KARTA SEZNAM UŽIVATELŮ */}
       <div className="bg-graphit-gray border border-graphit-gray-dark rounded-lg shadow-xl overflow-hidden">

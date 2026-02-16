@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, BigInteger, ForeignKey, JSON, DateTime, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, BigInteger, ForeignKey, JSON, DateTime, UniqueConstraint, LargeBinary
 from sqlalchemy.orm import relationship
 from .database import Base
 from datetime import datetime
@@ -34,3 +34,11 @@ class MarketData(Base):
     __table_args__ = (
         UniqueConstraint('symbol', 'interval', 'open_time', name='uix_symbol_interval_time'),
     )
+
+class CompressedFile(Base):
+    __tablename__ = "compressed"
+
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String, index=True)
+    filename = Column(String, unique=True, index=True)
+    file_data = Column(LargeBinary)

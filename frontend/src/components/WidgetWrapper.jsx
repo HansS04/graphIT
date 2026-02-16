@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { useDashboardState } from '../context/DashboardContext';
 import SmartChartWidget from './SmartChartWidget';
+import PredictionWidget from './PredictionWidget';
 
 const KPIContent = () => (
   <div className="flex flex-col items-center justify-center h-full text-text-graphit-white">
@@ -75,7 +76,7 @@ const WidgetWrapper = ({ id, index, type, cols, rows, data, onRemove, onResize, 
           <div className="flex justify-between items-center mb-4 border-b border-graphit-gray-dark pb-2 select-none h-10 min-h-[40px]">
             <div className="flex items-center gap-2 overflow-hidden">
                 <h3 className="font-bold text-text-graphit-white uppercase text-xs tracking-wider flex items-center gap-2 truncate">{type}{isLocked && <span className="text-red-400 opacity-50 text-[10px]">🔒</span>}</h3>
-                {type === 'CHART' && (
+                {(type === 'CHART' || type === 'PREDICTION') && (
                     <select value={data?.symbol || 'BTCEUR'} onChange={handleSymbolChange} onMouseDown={(e) => e.stopPropagation()} className="bg-graphit-dark-blue text-xs text-white border border-graphit-gray-light rounded px-1 py-0.5 ml-2 focus:outline-none focus:border-graphit-turquoise w-24 cursor-pointer">
                     <option value="BTCEUR">BTCEUR</option>
                     <option value="ETHEUR">ETHEUR</option>
@@ -93,7 +94,7 @@ const WidgetWrapper = ({ id, index, type, cols, rows, data, onRemove, onResize, 
             )}
           </div>
           <div className="flex-grow overflow-hidden relative">
-            {(() => { switch (type) { case 'KPI': return <KPIContent />; case 'CHART': return <SmartChartWidget symbol={data?.symbol || 'BTCEUR'} />; case 'CONTROLS': return <ControlContent />; case 'TABLE': return <TableContent />; default: return <div>Neznámý</div>; } })()}
+            {(() => { switch (type) { case 'KPI': return <KPIContent />; case 'CHART': return <SmartChartWidget symbol={data?.symbol || 'BTCEUR'} />; case 'PREDICTION': return <PredictionWidget symbol={data?.symbol || 'BTCEUR'} />; case 'CONTROLS': return <ControlContent />; case 'TABLE': return <TableContent />; default: return <div>Neznámý</div>; } })()}
           </div>
         </>
       )}
