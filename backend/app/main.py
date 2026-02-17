@@ -2,12 +2,9 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from apscheduler.schedulers.background import BackgroundScheduler
-from . import models, schemas, auth, database
 from datetime import timedelta
-import pandas as pd
-import os
-import glob
+
+from . import models, schemas, auth, database
 import numpy as np
 
 app = FastAPI()
@@ -21,97 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-scheduler = BackgroundScheduler()
-
-def import_csv_to_db(db: Session, file_path: str, symbol: str, interval: str):
-    filename = os.path.basename(file_path)
-    try:
-        df = pd.read_csv(file_path, names=["Open Time", "Open", "High", "Low", "Close", "Volume", "Close Time", "Q", "N", "TB", "TQ", "I"])
-        df["open_time"] = df["Open Time"] // 1000000
-        
-        existing_times = set(
-            t[0] for t in db.query(models.MarketData.open_time)
-            .filter(models.MarketData.symbol == symbol, models.MarketData.interval == interval)
-            .all()
-        )
-        
-        inserted_count = 0
-        for _, row in df.iterrows():
-            t = int(row["open_time"])
-            if t in existing_times:
-                continue
-
-            db_item = models.MarketData(
-                symbol=symbol, 
-                interval=interval, 
-                open_time=t,
-                open=float(row["Open"]), 
-                high=float(row["High"]), 
-                low=float(row["Low"]),
-                close=float(row["Close"]), 
-                volume=float(row["Volume"])
-            )
-            db.add(db_item)
-            inserted_count += 1
-        
-        db.commit()
-        if inserted_count > 0:
-            print(f"[{symbol}] {filename}: Imported {inserted_count} new candles.")
-            
-    except Exception as e:
-        print(f"[{symbol}] {filename}: Import error: {e}")
-        db.rollback()
-
-def scan_and_import_data():
-    storage_dirs = ["storage", "/app/storage", "../storage"]
-    storage_dir = None
-    for path in storage_dirs:
-        if os.path.exists(path):
-            storage_dir = path
-            break
-    if not storage_dir: return
-
-    csv_files = glob.glob(os.path.join(storage_dir, "**", "*.csv"), recursive=True)
-    
-    if not csv_files: return
-
-    db = database.SessionLocal()
-    try:
-        for file_path in csv_files:
-            filename = os.path.basename(file_path).upper()
-            if "TRADE" in filename: continue
-
-            symbol = "UNKNOWN"
-            possible_symbols = ["BTCEUR", "ETHEUR", "ETCEUR", "SOLEUR", "ADAEUR", "BTCUSD", "ETHUSD", "SOLUSD", "ADAUSD", "BTCUSDT", "ETHUSDT", "SOLUSDT"]
-            
-            parent_folder = os.path.basename(os.path.dirname(file_path)).upper()
-            for s in possible_symbols:
-                if s in filename or s in parent_folder:
-                    symbol = s
-                    break
-            
-            if symbol == "UNKNOWN": continue
-
-            interval = "1h"
-            if "1M" in filename and "1MO" not in filename: interval = "1m"
-            elif "1D" in filename: interval = "1d"
-            elif "15M" in filename: interval = "15m"
-            elif "4H" in filename: interval = "4h"
-            
-            import_csv_to_db(db, file_path, symbol, interval)
-    finally:
-        db.close()
-
 @app.on_event("startup")
 def startup_event():
     models.Base.metadata.create_all(bind=database.engine)
-    scheduler.add_job(scan_and_import_data, 'interval', seconds=60)
-    scheduler.start()
-    scan_and_import_data()
-
-@app.on_event("shutdown")
-def shutdown_event():
-    scheduler.shutdown()
 
 def get_db():
     db = database.SessionLocal()
@@ -187,6 +96,8 @@ def delete_preset(preset_id: int, db: Session = Depends(get_db), current_user: m
     db.commit()
     return {"message": "Deleted"}
 
+# --- ENDPOINTY PRO GRAFY ---
+
 @app.get("/api/market-data/{symbol}")
 def get_market_data(symbol: str, db: Session = Depends(get_db)):
     data = db.query(models.MarketData).filter(
@@ -196,17 +107,23 @@ def get_market_data(symbol: str, db: Session = Depends(get_db)):
     
     if not data: return []
 
-    return [
-        {
-            "time": d.open_time,
+    records = []
+    for d in data:
+        # MAGIE: Oprava milisekund na sekundy přímo tady!
+        time_val = int(d.open_time)
+        if time_val > 9999999999:  # Pokud je číslo moc dlouhé (milisekundy)
+            time_val = time_val // 1000  # Ořízneme ho
+            
+        records.append({
+            "time": time_val,
             "open": d.open,
             "high": d.high,
             "low": d.low,
             "close": d.close,
             "value": d.volume
-        } 
-        for d in data
-    ]
+        })
+        
+    return records
 
 @app.get("/api/predict/{symbol}")
 def predict_price(symbol: str, days: int = 7, db: Session = Depends(get_db)):
@@ -222,7 +139,11 @@ def predict_price(symbol: str, days: int = 7, db: Session = Depends(get_db)):
     
     close_prices = [d.close for d in history]
     last_close = close_prices[-1]
-    last_time = history[-1].open_time
+    
+    # MAGIE: Oprava milisekund i pro startovací bod predikce
+    last_time = int(history[-1].open_time)
+    if last_time > 9999999999:
+        last_time = last_time // 1000
 
     returns = np.diff(np.log(close_prices))
     drift = np.mean(returns)
@@ -241,7 +162,6 @@ def predict_price(symbol: str, days: int = 7, db: Session = Depends(get_db)):
 
     for _ in range(future_steps):
         current_time += 3600
-        
         current_avg = current_avg * (1 + drift)
         current_bull = current_bull * (1 + drift + (stdev * 0.5))
         current_bear = current_bear * (1 + drift - (stdev * 0.5))
