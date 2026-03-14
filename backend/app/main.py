@@ -123,8 +123,70 @@ def get_market_data(symbol: str, db: Session = Depends(get_db)):
         
     return records
 
+def extract_percentiles(price_paths, start_time):
+    """
+    Krok 3: Z matice (10000 x 72) vybere 3 hlavní linky a zabalí je pro Lightweight Charts.
+    """
+    # 95. percentil (Bullish)
+    bull_line = np.percentile(price_paths, 95, axis=0)
+    
+    # 50. percentil (Average)
+    avg_line = np.percentile(price_paths, 50, axis=0)
+    
+    # 5. percentil (Bearish)
+    bear_line = np.percentile(price_paths, 5, axis=0)
+    
+    bull_data = []
+    avg_data = []
+    bear_data = []
+    
+    current_time = start_time
+    
+    for i in range(len(bull_line)):
+        current_time += 3600  # Posun o 1 hodinu vpřed
+        
+        bull_data.append({"time": current_time, "value": float(bull_line[i])})
+        avg_data.append({"time": current_time, "value": float(avg_line[i])})
+        bear_data.append({"time": current_time, "value": float(bear_line[i])})
+        
+    return bull_data, avg_data, bear_data
+
+def get_simulation_parameters(close_prices):
+    """
+    Krok 1: Přijme pole historických uzavíracích cen a spočítá parametry pro GBM.
+    """
+
+    prices = np.array(close_prices)
+    
+    log_returns = np.diff(np.log(prices))
+    
+    mu = np.mean(log_returns)
+    
+    sigma = np.std(log_returns)
+    
+    last_price = prices[-1]
+    
+    return mu, sigma, last_price
+
+def run_monte_carlo(mu, sigma, last_price, days=3, num_simulations=10000):
+    """
+    Krok 2: Vygeneruje 10 000 možných budoucností pomocí modelu GBM.
+    Vrací obrovskou matici cen (10000 řádků x 72 sloupců).
+    """
+
+    steps = days * 24 
+    
+    Z = np.random.standard_normal((num_simulations, steps))
+    
+    hourly_changes = np.exp((mu - 0.5 * sigma**2) + sigma * Z)
+    
+    price_paths = last_price * np.cumprod(hourly_changes, axis=1)
+    
+    return price_paths
+
 @app.get("/api/predict/{symbol}")
-def predict_price(symbol: str, days: int = 7, db: Session = Depends(get_db)):
+def predict_price(symbol: str, days: int = 3, db: Session = Depends(get_db)):
+
     history = db.query(models.MarketData).filter(
         models.MarketData.symbol == symbol,
         models.MarketData.interval == "1h"
@@ -136,41 +198,21 @@ def predict_price(symbol: str, days: int = 7, db: Session = Depends(get_db)):
     history.reverse()
     
     close_prices = [d.close for d in history]
-    last_close = close_prices[-1]
     
     last_time = int(history[-1].open_time)
     if last_time > 9999999999:
         last_time = last_time // 1000
 
-    returns = np.diff(np.log(close_prices))
-    drift = np.mean(returns)
-    stdev = np.std(returns)
-
-    future_steps = days * 24 
+    mu, sigma, last_price = get_simulation_parameters(close_prices)
     
-    prediction_avg = []
-    prediction_bull = []
-    prediction_bear = []
-
-    current_avg = last_close
-    current_bull = last_close
-    current_bear = last_close
-    current_time = last_time
-
-    for _ in range(future_steps):
-        current_time += 3600
-        current_avg = current_avg * (1 + drift)
-        current_bull = current_bull * (1 + drift + (stdev * 0.5))
-        current_bear = current_bear * (1 + drift - (stdev * 0.5))
-
-        prediction_avg.append({"time": current_time, "value": current_avg})
-        prediction_bull.append({"time": current_time, "value": current_bull})
-        prediction_bear.append({"time": current_time, "value": current_bear})
+    price_paths = run_monte_carlo(mu, sigma, last_price, days=days, num_simulations=10000)
+    
+    bull_data, avg_data, bear_data = extract_percentiles(price_paths, last_time)
 
     return {
         "symbol": symbol,
-        "last_price": last_close,
-        "avg": prediction_avg,
-        "bull": prediction_bull,
-        "bear": prediction_bear
+        "last_price": last_price,
+        "avg": avg_data,
+        "bull": bull_data,
+        "bear": bear_data
     }

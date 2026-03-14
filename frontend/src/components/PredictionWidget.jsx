@@ -41,25 +41,44 @@ const PredictionWidget = ({ id, data }) => {
         color: '#EF4444', lineWidth: 2, lineStyle: 2, title: 'Bearish' 
     });
 
-    const loadData = async () => {
+  const loadData = async () => {
       try {
         const histRes = await fetch(`http://localhost:8000/api/market-data/${symbol}`);
         const histData = await histRes.json();
         
-        const recentHistory = histData.slice(-200).map(d => ({ time: d.time, value: d.close }));
+        const recentHistory = histData.slice(-200).map(d => ({ 
+            time: d.time, 
+            value: d.close 
+        }));
+        
         historySeries.setData(recentHistory);
 
+        const lastHistPoint = recentHistory[recentHistory.length - 1];
+
         const predRes = await fetch(`http://localhost:8000/api/predict/${symbol}?days=3`);
+        
+        if (!predRes.ok) throw new Error("Nepodařilo se načíst predikci");
         const predData = await predRes.json();
 
-        bullSeries.setData(predData.bull);
-        avgSeries.setData(predData.avg);
-        bearSeries.setData(predData.bear);
+        const bridgePoint = { 
+            time: lastHistPoint.time, 
+            value: predData.last_price || lastHistPoint.value 
+        };
+
+        const bullData = [bridgePoint, ...predData.bull];
+        const avgData = [bridgePoint, ...predData.avg];
+        const bearData = [bridgePoint, ...predData.bear];
+
+        bullSeries.setData(bullData);
+        avgSeries.setData(avgData);
+        bearSeries.setData(bearData);
 
         chart.timeScale().fitContent();
-        setLoading(false);
+        
       } catch (err) {
-        console.error(err);
+        console.error("Chyba při renderování grafu:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
