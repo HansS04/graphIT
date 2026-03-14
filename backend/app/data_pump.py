@@ -12,7 +12,7 @@ from app import models
 
 SYMBOLS = ["BTCEUR", "ETHEUR"]
 INTERVAL = "1h"
-START_YEAR = 2025 # Nastaveno na 2025, abys měl dostatek dat pro graf
+START_YEAR = 2025
 START_MONTH = 1
 STORAGE_DIR = "./temp_storage"
 BASE_URL = "https://data.binance.vision/data/spot/monthly/klines"
@@ -75,7 +75,6 @@ def process_data():
                 filename_base = f"{symbol}-{INTERVAL}-{year}-{month}"
                 zip_name = f"{filename_base}.zip"
                 
-                # Zkontrolujeme, jestli už tento ZIP nemáme v zálohách
                 existing_file = db.query(models.CompressedFile).filter(models.CompressedFile.filename == zip_name).first()
                 if existing_file:
                     print(f"[SKIP] {zip_name} už je kompletně v databázi, přeskakuji.")
@@ -87,16 +86,13 @@ def process_data():
                 url_zip = f"{BASE_URL}/{symbol}/{INTERVAL}/{zip_name}"
                 url_checksum = f"{BASE_URL}/{symbol}/{INTERVAL}/{zip_name}.CHECKSUM"
 
-                # 1. STAŽENÍ SOUBORŮ
                 if not download_file(url_zip, local_zip): continue
                 if not download_file(url_checksum, local_checksum):
                     if os.path.exists(local_zip): os.remove(local_zip)
                     continue
 
-                # 2. KONTROLA CHECKSUMU
                 if verify_checksum(local_zip, local_checksum):
                     try:
-                        # 3. ZPRACOVÁNÍ A ODESLÁNÍ DO MARKET_DATA
                         print(f"[DB] Čtu CSV a odesílám data do market_data...")
                         with zipfile.ZipFile(local_zip, 'r') as zip_ref:
                             csv_filename = zip_ref.namelist()[0]
@@ -107,7 +103,7 @@ def process_data():
                                 
                                 inserted_count = 0
                                 for _, row in df.iterrows():
-                                    t = int(row["Open Time"] // 1000) # Unix timestamp (sekundy)
+                                    t = int(row["Open Time"] // 1000)
                                     if t in existing_times: continue
                                     
                                     db_item = models.MarketData(
@@ -118,7 +114,7 @@ def process_data():
                                     db.add(db_item)
                                     inserted_count += 1
 
-                        # 4. ODESLÁNÍ ZIPU DO COMPRESSED (Záloha)
+                        
                         print(f"[DB] Odesílám ZIP zálohu do compressed...")
                         with open(local_zip, 'rb') as f:
                             zip_data = f.read()
@@ -126,22 +122,20 @@ def process_data():
                         new_db_file = models.CompressedFile(symbol=symbol, filename=zip_name, file_data=zip_data)
                         db.add(new_db_file)
                         
-                        # Potvrzení obou operací do databáze najednou
+                       
                         db.commit()
                         print(f"[SUCCESS] {zip_name} zpracován! {inserted_count} svíček přidáno.")
                         
                     except Exception as e:
                         print(f"[ERROR] Nastala chyba při ukládání do DB: {e}")
-                        db.rollback() # Pokud něco selže, data se neuloží ani do jedné tabulky
+                        db.rollback()
 
-                # 5. SMAZÁNÍ V LOKÁLU A PŘECHOD NA DALŠÍ
                 if os.path.exists(local_zip): os.remove(local_zip)
                 if os.path.exists(local_checksum): os.remove(local_checksum)
                 print(f"[CLEANUP] Lokální soubory smazány.\n")
                 
-                time.sleep(0.3) # Krátká pauza pro Binance API
+                time.sleep(0.3) 
 
-        # Úklid celé složky na samotný závěr
         if os.path.exists(STORAGE_DIR):
             shutil.rmtree(STORAGE_DIR)
 

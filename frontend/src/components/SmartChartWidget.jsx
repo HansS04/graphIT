@@ -1,57 +1,84 @@
-import React, { useEffect, useState } from 'react';
-import CandlestickChart from './CandlestickChart';
+import React, { useEffect, useRef, useState } from 'react';
+import { useDashboardState } from '../context/DashboardContext';
 
-const SmartChartWidget = ({ symbol }) => {
-  const activeSymbol = symbol || 'BTCEUR';
-  const [chartData, setChartData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+import { createChart, ColorType, CandlestickSeries } from 'lightweight-charts';
+const SmartChartWidget = ({ id, data }) => {
+  const chartContainerRef = useRef();
+  const chartRef = useRef(); // Reference pro samotný graf, abychom ho mohli resizeovat
+  const { updateWidgetData } = useDashboardState();
+  
+  const symbol = data?.symbol || 'BTCEUR';
+
+  const handleSymbolChange = (e) => {
+    updateWidgetData(id, { symbol: e.target.value });
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`http://localhost:8000/api/market-data/${activeSymbol}`);
-        if (!response.ok) throw new Error('Data nenalezena');
-        
-        const data = await response.json();
-        setChartData(data);
-      } catch (err) {
-        console.error("Chyba:", err);
-        setError(`Chyba dat: ${activeSymbol}`);
-      } finally {
-        setLoading(false);
-      }
+    if (!chartContainerRef.current) return;
+
+    const chart = createChart(chartContainerRef.current, {
+      layout: {
+        background: { type: ColorType.Solid, color: '#2B2D31' },
+        textColor: '#D1D5DB',
+      },
+      grid: {
+        vertLines: { color: '#374151' },
+        horzLines: { color: '#374151' },
+      },
+      width: chartContainerRef.current.clientWidth,
+      height: chartContainerRef.current.clientHeight,
+    });
+
+    const candlestickSeries = chart.addSeries(CandlestickSeries, {
+      upColor: '#10B981', 
+      downColor: '#EF4444', 
+      borderVisible: false,
+      wickUpColor: '#10B981', 
+      wickDownColor: '#EF4444',
+    });
+
+    fetch(`http://localhost:8000/api/market-data/${symbol}`)
+      .then(res => res.json())
+      .then(data => {
+        candlestickSeries.setData(data);
+        chart.timeScale().fitContent();
+      });
+
+    const resizeObserver = new ResizeObserver(() => {
+      window.requestAnimationFrame(() => {
+        if (chartContainerRef.current && chart) {
+          chart.applyOptions({ 
+            width: chartContainerRef.current.clientWidth, 
+            height: chartContainerRef.current.clientHeight 
+          });
+        }
+      });
+    });
+
+    resizeObserver.observe(chartContainerRef.current);
+    chartRef.current = chart;
+
+    return () => {
+      resizeObserver.disconnect();
+      chart.remove();
     };
-
-    fetchData();
-  }, [activeSymbol]);
-
-  if (loading) return <div className="text-gray-500 text-xs flex justify-center items-center h-full animate-pulse">Načítám {activeSymbol}...</div>;
-  if (error) return <div className="text-red-400 text-xs flex justify-center items-center h-full">{error}</div>;
-
+  }, [symbol]);
   return (
-    <div className="w-full h-full flex flex-col bg-[#2B2D31] relative"> 
-      <div className="absolute top-2 left-2 z-10 flex gap-2 pointer-events-none">
-          <div className="bg-[#2B2D31]/80 backdrop-blur px-2 py-1 rounded border border-gray-700 shadow-sm">
-             <span className="text-white font-bold text-sm">{activeSymbol}</span>
-             <span className="text-graphit-turquoise text-xs ml-2">{chartData.length}h</span>
-          </div>
+    <div className="w-full h-full flex flex-col relative bg-[#2B2D31] overflow-hidden">
+      <div className="absolute top-2 left-2 z-20 bg-[#2B2D31]/80 px-2 py-1 rounded border border-gray-700 flex gap-2 items-center">
+        <span className="text-white font-bold text-xs">GRAF</span>
+        <select
+          value={symbol}
+          onChange={handleSymbolChange}
+          className="bg-transparent text-xs text-emerald-400 font-bold outline-none cursor-pointer"
+        >
+          <option value="BTCEUR">BTCEUR</option>
+          <option value="ETHEUR">ETHEUR</option>
+          <option value="SOLUSD">SOLUSD</option>
+        </select>
       </div>
-      
-      <div className="flex-grow relative overflow-hidden">
-         <CandlestickChart data={chartData} />
-      </div>
-      
-      <div className="absolute bottom-1 right-2 z-10 pointer-events-none">
-         <span className="text-[9px] text-gray-600 font-mono">
-            {chartData.length > 0 
-              ? `${new Date(chartData[0].time * 1000).toLocaleDateString()} - ${new Date(chartData[chartData.length - 1].time * 1000).toLocaleDateString()}`
-              : 'Žádná data'
-            }
-         </span>
-      </div>
+
+      <div ref={chartContainerRef} className="flex-grow w-full h-full" />
     </div>
   );
 };

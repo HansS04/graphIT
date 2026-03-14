@@ -13,14 +13,12 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
-    // Jednoduchá validace hesel
     if (password !== confirmPassword) {
       setError('Hesla se neshodují!');
       return;
     }
 
     try {
-      // Volání tvého FastAPI backendu
       const response = await fetch('http://localhost:8000/register', {
         method: 'POST',
         headers: {
@@ -30,7 +28,7 @@ const Register = () => {
         body: JSON.stringify({
           email: email,
           password: password,
-          role: 'user' // Běžná registrace z webu dostane vždy roli user
+          role: 'user'
         }),
       });
 
@@ -39,7 +37,6 @@ const Register = () => {
         throw new Error(errData.detail || 'Registrace selhala');
       }
 
-      // Pokud vše klaplo, ukážeme zprávu a za chvíli přesměrujeme na login
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');

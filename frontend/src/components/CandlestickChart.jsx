@@ -5,7 +5,6 @@ const CandlestickChart = ({ data }) => {
   const chartContainerRef = useRef();
   const chartInstance = useRef(null);
   
-  // Stav pro plovoucí štítek přímo na myši
   const [tooltip, setTooltip] = useState({
     visible: false,
     x: 0,
@@ -31,10 +30,10 @@ const CandlestickChart = ({ data }) => {
         horzLines: { color: '#374151', style: 1 },
       },
       crosshair: {
-        mode: 0, // Volný pohyb kříže
+        mode: 0,
       },
       localization: {
-        locale: 'cs-CZ', // Vynutíme českou lokalizaci pro nativní funkce
+        locale: 'cs-CZ',
         timeFormatter: (time) => {
           const date = new Date(time * 1000);
           return date.toLocaleDateString('cs-CZ') + ' ' +
@@ -48,22 +47,20 @@ const CandlestickChart = ({ data }) => {
         barSpacing: 22,
         minBarSpacing: 10,
         
-        // --- DOKONALÉ FORMÁTOVÁNÍ OSY X ---
         tickMarkFormatter: (time, tickMarkType, locale) => {
           const date = new Date(time * 1000);
           
-          // Knihovna sama určuje hierarchii (0 = Rok, 1 = Měsíc, 2 = Den, 3 = Čas)
           switch (tickMarkType) {
-            case 0: // Změna ROKU
+            case 0:
               return date.getFullYear().toString();
               
-            case 1: // Změna MĚSÍCE (Zobrazí se např. "říj" - max 1x za měsíc)
+            case 1:
               return date.toLocaleDateString('cs-CZ', { month: 'short' });
               
-            case 2: // Změna DNE (Zobrazí se např. "15. 10.")
+            case 2:
               return date.getDate() + '. ' + (date.getMonth() + 1) + '.';
               
-            case 3: // Běžná HODINA (Zobrazí se např. "14:00")
+            case 3:
               return date.getHours().toString().padStart(2, '0') + ':00';
               
             default:
@@ -100,10 +97,8 @@ const CandlestickChart = ({ data }) => {
     });
     volumeSeries.setData(volumeData);
 
-    // Načte graf posunutý na nejnovější data doprava
     chart.timeScale().scrollToPosition(0, false);
 
-    // Sledování pohybu myši a aktualizace pozice plovoucího štítku
     chart.subscribeCrosshairMove((param) => {
       if (
         !param.time || 
@@ -112,7 +107,7 @@ const CandlestickChart = ({ data }) => {
         param.point.x > chartContainerRef.current.clientWidth || 
         param.point.y > chartContainerRef.current.clientHeight
       ) {
-        // Skrýt štítek, pokud myš vyjede mimo graf
+
         setTooltip(prev => ({ ...prev, visible: false }));
       } else {
         const priceData = param.seriesData.get(candleSeries);
@@ -152,13 +147,12 @@ const CandlestickChart = ({ data }) => {
 
   return (
     <div className="w-full h-full relative" ref={chartContainerRef}>
-      {/* Plovoucí štítek (Tooltip), který následuje myš */}
       {tooltip.visible && (
         <div 
           className="absolute z-50 pointer-events-none bg-[#1E1F22]/95 border border-gray-600 rounded shadow-xl p-2 text-xs font-mono text-gray-200 backdrop-blur-sm"
           style={{ 
-            left: tooltip.x + 15, // Posunuté mírně doprava od myši
-            top: tooltip.y + 15,  // Posunuté mírně dolů od myši
+            left: tooltip.x + 15,
+            top: tooltip.y + 15,
             transform: 'translate(0, 0)'
           }}
         >

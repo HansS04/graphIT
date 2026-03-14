@@ -6,7 +6,7 @@ function GlassyCard({ children, className = '' }) {
   return (
     <div
       className={`
-        // Základní "skleněné" styly
+    
         bg-text-graphit-white/10    // 1. Pozadí: Průhledná bílá (10% opacita). Používá vaši definovanou bílou barvu.
         backdrop-blur-md            // 2. Rozmazání pozadí: Toto je klíč k "skleněnému" efektu. Střední rozmazání.
         border border-text-graphit-white/20 // 3. Okraj: Jemný bílý okraj (20% opacita) pro definování tvaru.

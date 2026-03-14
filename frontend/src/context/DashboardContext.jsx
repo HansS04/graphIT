@@ -23,51 +23,74 @@ export const DashboardProvider = ({ children }) => {
   const updateSymbol = (newSymbol) => {
     setSymbol(newSymbol);
     localStorage.setItem('graphit_last_symbol', newSymbol);
-  };
 
+    setWidgets((prevWidgets) => 
+      prevWidgets.map((w) => {
+        if (w.type === 'CHART' || w.type === 'PREDICTION') {
+          return { ...w, data: { ...w.data, symbol: newSymbol } };
+        }
+        return w;
+      })
+    );
+  };
   const addWidget = (type) => {
+    const id = Date.now().toString();
+    
     const newItem = { 
-        id: Date.now(), 
-        type, 
-        cols: type === 'CHART' ? 2 : 1, 
-        rows: type === 'CHART' ? 2 : 1,
+        i: id,
+        type: type, 
+        x: 0,
+        y: Infinity,
+        w: type === 'CHART' ? 6 : 3,
+        h: type === 'CHART' ? 4 : 2,
         data: { symbol: symbol }
     };
     setWidgets((prev) => [...prev, newItem]);
   };
 
   const removeWidget = (id) => {
-    setWidgets((prev) => prev.filter((w) => w.id !== id));
-  };
-
-  const updateWidgetSize = (id, newCols, newRows) => {
-    setWidgets((prev) => prev.map((w) => {
-      if (w.id === id) {
-        const safeCols = Math.max(1, Math.min(3, newCols));
-        const safeRows = Math.max(1, Math.min(2, newRows));
-        return { ...w, cols: safeCols, rows: safeRows };
-      }
-      return w;
-    }));
+    setWidgets((prev) => prev.filter((w) => w.i !== id));
   };
 
   const updateWidgetData = (id, newData) => {
     setWidgets((prev) => prev.map((w) => {
-      if (w.id === id) {
+      if (w.i === id) {
         return { ...w, data: { ...w.data, ...newData } };
       }
       return w;
     }));
   };
 
-  const moveWidget = useCallback((dragIndex, hoverIndex) => {
+  const onDropWidget = (type, x, y) => {
+    const id = Date.now().toString();
+    const newItem = { 
+        i: id, 
+        type: type, 
+        x: x,
+        y: y,
+        w: type === 'CHART' ? 6 : 3, 
+        h: type === 'CHART' ? 4 : 2,
+        data: { symbol: symbol }
+    };
+    setWidgets((prev) => [...prev, newItem]);
+  };
+  const onLayoutChange = (newLayout) => {
     setWidgets((prevWidgets) => {
-      const newWidgets = [...prevWidgets];
-      const [draggedWidget] = newWidgets.splice(dragIndex, 1);
-      newWidgets.splice(hoverIndex, 0, draggedWidget);
-      return newWidgets;
+      return prevWidgets.map((widget) => {
+        const updatedItem = newLayout.find(item => item.i === widget.i);
+        if (updatedItem) {
+          return {
+            ...widget,
+            x: updatedItem.x,
+            y: updatedItem.y,
+            w: updatedItem.w,
+            h: updatedItem.h
+          };
+        }
+        return widget;
+      });
     });
-  }, []);
+  };
 
   const fetchPresets = async () => {
     const token = localStorage.getItem('access_token');
@@ -158,10 +181,11 @@ export const DashboardProvider = ({ children }) => {
   useEffect(() => { fetchPresets(); }, []);
 
   const value = {
-    widgets, addWidget, removeWidget, updateWidgetSize, moveWidget, updateWidgetData,
+    widgets, addWidget, removeWidget, updateWidgetData,
+    onLayoutChange,
     state: { symbol }, updateSymbol,
     presets, currentPresetId, loadPreset, saveAsNewPreset, updateCurrentPreset, deletePreset,
-    isLocked, toggleLock, hasUnsavedChanges
+    isLocked, toggleLock, hasUnsavedChanges, onDropWidget
   };
 
   return (

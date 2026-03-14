@@ -96,7 +96,6 @@ def delete_preset(preset_id: int, db: Session = Depends(get_db), current_user: m
     db.commit()
     return {"message": "Deleted"}
 
-# --- ENDPOINTY PRO GRAFY ---
 
 @app.get("/api/market-data/{symbol}")
 def get_market_data(symbol: str, db: Session = Depends(get_db)):
@@ -109,10 +108,9 @@ def get_market_data(symbol: str, db: Session = Depends(get_db)):
 
     records = []
     for d in data:
-        # MAGIE: Oprava milisekund na sekundy přímo tady!
         time_val = int(d.open_time)
-        if time_val > 9999999999:  # Pokud je číslo moc dlouhé (milisekundy)
-            time_val = time_val // 1000  # Ořízneme ho
+        if time_val > 9999999999:
+            time_val = time_val // 1000
             
         records.append({
             "time": time_val,
@@ -140,7 +138,6 @@ def predict_price(symbol: str, days: int = 7, db: Session = Depends(get_db)):
     close_prices = [d.close for d in history]
     last_close = close_prices[-1]
     
-    # MAGIE: Oprava milisekund i pro startovací bod predikce
     last_time = int(history[-1].open_time)
     if last_time > 9999999999:
         last_time = last_time // 1000

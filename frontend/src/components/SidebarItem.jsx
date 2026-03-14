@@ -1,28 +1,20 @@
 import React from 'react';
-import { useDrag } from 'react-dnd';
 
 const SidebarItem = ({ type, label, icon }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: 'WIDGET', 
-    item: { type }, 
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
-    }),
-  }));
+  const handleDragStart = (e) => {
+    e.dataTransfer.setData("widgetType", type);
+  };
 
   return (
     <div
-      ref={drag}
-      className={`
-        flex items-center gap-3 p-3 rounded-lg cursor-grab 
-        bg-graphit-gray-dark border border-graphit-gray-dark 
-        hover:border-graphit-turquoise hover:bg-graphit-gray
-        transition-all duration-200 select-none active:cursor-grabbing
-        ${isDragging ? 'opacity-50' : 'opacity-100'}
-      `}
+      draggable={true}
+      onDragStart={handleDragStart}
+      className="p-3 mb-2 bg-graphit-dark-blue border border-graphit-gray-dark rounded hover:border-blue-500 cursor-grab active:cursor-grabbing text-graphit-gray-light flex items-center gap-3 transition-colors"
     >
-      <span className="text-graphit-turquoise text-xl">{icon}</span>
-      <span className="text-text-graphit-white font-medium">{label}</span>
+      <div className="flex items-center justify-center text-blue-400">
+        {icon}
+      </div>
+      <span className="font-semibold text-sm">{label}</span>
     </div>
   );
 };
