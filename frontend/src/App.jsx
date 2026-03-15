@@ -3,16 +3,16 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DashboardProvider } from './context/DashboardContext';
-import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar';
-import Home from './components/Home';
-import About from './components/About';
-import Login from './components/Login';
-import Register from './components/Register';
-import AdminDashboard from './components/AdminDashboard';
-import UserDashboard from './components/UserDashboard';
+import Navbar from './layouts/Navbar';
+import Sidebar from './layouts/Sidebar';
+import Home from './pages/Home';
+import About from './pages/About';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import AdminDashboard from './pages/AdminDashboard';
+import UserDashboard from './pages/AdminDashboard';
 import { fetchCurrentUser } from './api';
-import Footer from './components/Footer';
+import Footer from './layouts/Footer';
 
 function App() {
   const [user, setUser] = useState(null);

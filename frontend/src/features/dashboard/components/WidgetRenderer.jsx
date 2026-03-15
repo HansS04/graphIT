@@ -1,6 +1,6 @@
 import React from 'react';
 import SmartChartWidget from './SmartChartWidget';
-import PredictionWidget from './PredictionWidget';
+import PredictionWidget from '../../../components/PredictionWidget';
 import GlobalSwitcherWidget from './GlobalSwitcherWidget';
 
 const WIDGET_COMPONENTS = {

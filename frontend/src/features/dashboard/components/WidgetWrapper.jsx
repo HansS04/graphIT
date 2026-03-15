@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
-import { useDashboardState } from '../context/DashboardContext';
+import { useDashboardState } from '../../../context/DashboardContext';
 import SmartChartWidget from './SmartChartWidget';
-import PredictionWidget from './PredictionWidget';
+import PredictionWidget from '../../../components/PredictionWidget';
 
 const KPIContent = () => (
   <div className="flex flex-col items-center justify-center h-full text-text-graphit-white">

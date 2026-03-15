@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDashboardState } from '../context/DashboardContext';
+import { useDashboardState } from '../../../context/DashboardContext';
 
 const GlobalSwitcherWidget = () => {
   const { state, updateSymbol } = useDashboardState();

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDashboardState } from '../context/DashboardContext';
-import DashboardGrid from './DashboardGrid';
+import DashboardGrid from '../features/dashboard/components/DashboardGrid';
 
 const UserDashboard = ({ user }) => {
   const { isLocked } = useDashboardState();

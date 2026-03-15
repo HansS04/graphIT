@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import SidebarItem from './SidebarItem';
-import { WIDGET_CATEGORIES } from './WidgetConfig';
+import { WIDGET_CATEGORIES } from '../features/dashboard/components/WidgetConfig';
 
 function Sidebar() {
   const [activeCategory, setActiveCategory] = useState(WIDGET_CATEGORIES[0]?.id || null);

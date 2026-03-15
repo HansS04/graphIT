@@ -1,6 +1,6 @@
 import React from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
-import { useDashboardState } from '../context/DashboardContext';
+import { useDashboardState } from '../../../context/DashboardContext';
 import WidgetRenderer from './WidgetRenderer';
 
 import 'react-grid-layout/css/styles.css';
@@ -24,7 +24,7 @@ const DashboardGrid = () => {
       <ResponsiveGridLayout
         className="layout min-h-[600px]"
         breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 4 }}
         rowHeight={100}
         onLayoutChange={onLayoutChange}
         isDraggable={!isLocked}

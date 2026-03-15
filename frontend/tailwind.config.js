@@ -1,10 +1,8 @@
-// GraphIT_app/frontend/tailwind.config.js
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{js,jsx}", // Tato cesta říká Tailwindu, aby prohledal všechny .js a .jsx soubory ve složce src a jejích podsložkách
-    "./public/index.html"  // Také prohledá hlavní HTML soubor
+    "./src/**/*.{js,jsx}",
+    "./public/index.html"
   ],
   theme: {
     extend: {

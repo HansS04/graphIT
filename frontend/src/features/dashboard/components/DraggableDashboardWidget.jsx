@@ -1,5 +1,3 @@
-// GraphIT_app/frontend/src/components/DraggableDashboardWidget.js
-
 import React from 'react';
 import { useDrag } from 'react-dnd';
 import GlassyCard from './GlassyCard';
