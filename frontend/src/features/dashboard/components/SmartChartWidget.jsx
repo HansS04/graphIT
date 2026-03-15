@@ -1,17 +1,23 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDashboardState } from '../../../context/DashboardContext';
-
+import { Maximize } from 'lucide-react';
 import { createChart, ColorType, CandlestickSeries } from 'lightweight-charts';
+
+
 const SmartChartWidget = ({ id, data }) => {
   const chartContainerRef = useRef();
   const chartRef = useRef();
   const { updateWidgetData } = useDashboardState();
-  
+
   const symbol = data?.symbol || 'BTCEUR';
 
   const [hoveredCandle, setHoveredCandle] = useState(null);
 
-
+  const handleResetView = () => {
+    if (chartRef.current) {
+      chartRef.current.timeScale().fitContent();
+    }
+  };
 
   const handleSymbolChange = (e) => {
     updateWidgetData(id, { symbol: e.target.value });
@@ -29,15 +35,25 @@ const SmartChartWidget = ({ id, data }) => {
         vertLines: { color: '#374151' },
         horzLines: { color: '#374151' },
       },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: false,
+        borderColor: '#374151',
+        fixLeftEdge: true,
+        rightOffset: 0,
+      },
+      localization: {
+        locale: 'cs-CZ',
+      },
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
     });
 
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: '#10B981', 
-      downColor: '#EF4444', 
+      upColor: '#10B981',
+      downColor: '#EF4444',
       borderVisible: false,
-      wickUpColor: '#10B981', 
+      wickUpColor: '#10B981',
       wickDownColor: '#EF4444',
     });
 
@@ -50,10 +66,10 @@ const SmartChartWidget = ({ id, data }) => {
 
     chart.subscribeCrosshairMove((param) => {
 
-      if(param.time && param.point.x >= 0 && param.point.y >= 0) {
+      if (param.time && param.point.x >= 0 && param.point.y >= 0) {
         const priceData = param.seriesData.get(candlestickSeries);
 
-        if(priceData){
+        if (priceData) {
           const changePercent = ((priceData.close - priceData.open) / priceData.open) * 100;
           const rangePercent = ((priceData.high - priceData.low) / priceData.open) * 100;
 
@@ -74,9 +90,9 @@ const SmartChartWidget = ({ id, data }) => {
     const resizeObserver = new ResizeObserver(() => {
       window.requestAnimationFrame(() => {
         if (chartContainerRef.current && chart) {
-          chart.applyOptions({ 
-            width: chartContainerRef.current.clientWidth, 
-            height: chartContainerRef.current.clientHeight 
+          chart.applyOptions({
+            width: chartContainerRef.current.clientWidth,
+            height: chartContainerRef.current.clientHeight
           });
         }
       });
@@ -96,11 +112,9 @@ const SmartChartWidget = ({ id, data }) => {
 
   return (
     <div className="w-full h-full flex flex-col relative bg-[#2B2D31] overflow-hidden">
-      
-      {/* HLAVNÍ OBAL PRO HLAVIČKU (Řeší zalamování na malé obrazovce) */}
+
       <div className="absolute top-2 left-2 right-2 z-20 flex flex-wrap gap-2 items-start pointer-events-none">
-        
-        {/* 1. PŘEPÍNAČ MĚN (pointer-events-auto zajišťuje, že na něj jde kliknout) */}
+
         <div className="pointer-events-auto shrink-0 bg-[#2B2D31]/80 px-2 py-1 rounded border border-gray-700 flex gap-2 items-center">
           <span className="text-white font-bold text-xs">GRAF</span>
           <select
@@ -132,26 +146,33 @@ const SmartChartWidget = ({ id, data }) => {
               <span className="text-gray-400">C:</span>
               <span className="text-gray-200">{hoveredCandle.close.toFixed(2)}</span>
             </div>
-            
+
             <div className="flex gap-1">
               <span className="text-gray-400">Chg:</span>
               <span className={hoveredCandle.change >= 0 ? "text-emerald-400" : "text-red-400"}>
                 {hoveredCandle.change > 0 ? '+' : ''}{hoveredCandle.change.toFixed(2)}%
               </span>
             </div>
-            
+
             <div className="flex gap-1">
               <span className="text-gray-400">Rng:</span>
               <span className="text-gray-200">{hoveredCandle.range.toFixed(2)}%</span>
             </div>
           </div>
         )}
-        
+
       </div>
 
-      {/* 3. SAMOTNÉ PLÁTNO GRAFU */}
       <div ref={chartContainerRef} className="flex-grow w-full h-full" />
-      
+      <button
+        onClick={handleResetView}
+        className="absolute bottom-4 right-4 z-30 p-2 bg-gray-700/50 hover:bg-gray-600 border border-gray-500 rounded-md transition-all opacity-0 group-hover:opacity-100 shadow-lg text-white"
+        title="Resetovat zobrazení"
+      >
+        <Maximize className="w-4 h-4" />
+      </button>
+
+
     </div>
   );
 };

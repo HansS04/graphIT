@@ -1,11 +1,20 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createChart, ColorType, LineSeries } from 'lightweight-charts';
+import { Maximize } from 'lucide-react';
 
 const PredictionWidget = ({ id, data }) => {
   const chartContainerRef = useRef();
+  const chartRef = useRef();
+  
   const [loading, setLoading] = useState(true);
   
   const symbol = data?.symbol || 'BTCEUR';
+
+  const handleResetView = () => {
+    if (chartRef.current) {
+      chartRef.current.timeScale().fitContent();
+     }
+    };
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -24,7 +33,7 @@ const PredictionWidget = ({ id, data }) => {
       height: chartContainerRef.current.clientHeight,
       timeScale: { timeVisible: true, secondsVisible: false },
     });
-
+    chartRef.current = chart;
     const historySeries = chart.addSeries(LineSeries, { 
         color: '#2962FF', lineWidth: 2, title: 'Historie' 
     });
@@ -98,6 +107,8 @@ const PredictionWidget = ({ id, data }) => {
     });
     resizeObserver.observe(chartContainerRef.current);
 
+    
+
     return () => {
       resizeObserver.disconnect();
       chart.remove();
@@ -113,6 +124,13 @@ const PredictionWidget = ({ id, data }) => {
       </div>
 
       <div ref={chartContainerRef} className="flex-grow w-full h-full relative" />
+       <button
+        onClick={handleResetView}
+        className="absolute bottom-10 right-4 z-30 p-2 bg-gray-700/50 hover:bg-gray-600 border border-gray-500 rounded-md transition-all opacity-0 group-hover:opacity-100 shadow-lg text-white"
+        title="Resetovat zobrazení"
+      >
+        <Maximize className="w-4 h-4" />
+  </button>
       
       <div className="flex justify-center gap-4 pb-1 pt-1 text-[10px] bg-transparent">
         <span className="text-emerald-400">● Bull</span>
