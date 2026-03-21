@@ -48,7 +48,7 @@ function App() {
     <DndProvider backend={HTML5Backend}>
       <Router>
         {user ? (
-          <DashboardProvider>
+          <DashboardProvider user={user}>
             <div className="flex flex-col h-screen overflow-hidden bg-graphit-dark-blue">
               <div className='shrink-0 z-50'><Navbar user={user} onLogout={handleLogout} /></div>
               <div className="flex flex-1 overflow-hidden blender-grid-bg relative z-10">

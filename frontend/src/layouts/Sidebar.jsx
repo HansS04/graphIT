@@ -1,22 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import SidebarItem from './SidebarItem';
-import { WIDGET_CATEGORIES } from '../features/dashboard/components/WidgetConfig';
+import { getWidgetCategories } from '../features/dashboard/components/WidgetConfig';
 
-function Sidebar() {
-  const [activeCategory, setActiveCategory] = useState(WIDGET_CATEGORIES[0]?.id || null);
+function Sidebar({ user }) {
+  const categories = useMemo(() => getWidgetCategories(user?.role), [user?.role]);
+  const [activeCategory, setActiveCategory] = useState(categories[0]?.id || null);
   
   const toggleCategory = (id) => { 
-    activeCategory === id ? setActiveCategory(null) : setActiveCategory(id); 
+    setActiveCategory(prev => prev === id ? null : id); 
   };
   
-  const currentCategory = WIDGET_CATEGORIES.find(c => c.id === activeCategory);
+  const currentCategory = categories.find(c => c.id === activeCategory);
   const currentItems = currentCategory?.items || [];
 
   return (
     <div className="flex h-full shadow-xl z-30 relative">
       
       <div className="w-20 h-full bg-graphit-dark-blue flex flex-col items-center py-6 gap-6 border-r border-graphit-gray-dark z-40">
-        {WIDGET_CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <button 
             key={cat.id} 
             onClick={() => toggleCategory(cat.id)} 

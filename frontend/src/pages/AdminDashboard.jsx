@@ -11,7 +11,7 @@ const UserDashboard = ({ user }) => {
         
         <div className="bg-graphit-gray border border-graphit-gray-dark p-6 rounded-lg shadow-lg mb-8 flex justify-between items-center relative z-20">
             <div>
-                <h1 className="text-2xl font-bold text-text-graphit-white">Admin dashboard</h1>
+                <h1 className="text-2xl font-bold text-text-graphit-white"> dashboard</h1>
                 <p className="text-graphit-gray-light">Vítejte, {user?.email || "Uživateli"}</p>
             </div>
             {isLocked && (
