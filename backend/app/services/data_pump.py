@@ -148,5 +148,4 @@ if __name__ == "__main__":
     process_data()
 
 def run_data_pump():
-    """Tuto funkci budeme volat z FastAPI"""
     process_data()

@@ -1,53 +1,53 @@
 
 services:
   db:
-    image: postgres:16-alpine
-    restart: always
+    image: postgres:16-alpine #Stáhne oficiální obraz PosgreSQL verze 16. "Alpine" verze je odlehčená a menší, což je vhodné pro kontejnery.
+    restart: always #Zajistí, že se kontejner automaticky restartuje v případě selhání(Spadne kontejner, restart počítače atd).
     env_file:
-      - .env
+      - .env #Načte proměnné prostředí z .env souboru, což umožňuje snadnou konfiguraci bez nutnosti měnit docker-compose.yml) a také zvyšuje bezpečnost, protože citlivé informace (jako hesla) nejsou přímo v souboru.
     ports:
-      - "5432:5432"
+      - "5432:5432" #Mapuje port 5432 z kontejneru na port 5432 na hostitelském počítači, což umožňuje přístup k databázi zvenčí.
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data #Používá pojmenovaný svazek "db_data" pro trvalé uložení dat PostgreSQL, což znamená, že data zůstanou zachována i po odstranění kontejneru.
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"] #Definuje příkaz pro kontrolu zdraví kontejneru, který ověřuje, zda je PostgreSQL připraven přijímat připojení. Používá proměnné prostředí pro uživatele a databázi.
+      interval: 5s #Interval mezi jednotlivými kontrolami zdraví, v tomto případě každých 5 sekund.
       timeout: 5s
       retries: 5
 
   pgadmin:
-    image: dpage/pgadmin4
-    restart: always
+    image: dpage/pgadmin4 #Stáhne oficiální obraz pgAdmin 4, což je webové rozhraní pro správu PostgreSQL databází.
+    restart: always #Opět stejné nastavení pro automatický restart kontejneru v případě selhání.
+    env_file:
+      - .env
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: root
-      GUNICORN_ACCESS_LOGFILE: /dev/null
+      GUNICORN_ACCESS_LOGFILE: /dev/null #Zakáže logování přístupů Gunicorn.
     ports:
       - "5050:80"
     depends_on:
-      - db
+      - db # Spustí se ve chvíli až když se spustí db
     volumes:
-      - ./servers.json:/pgadmin4/servers.json
+      - ./servers.json:/pgadmin4/servers.json #Namapuje lokální soubor servers.json do kontejneru, což umožňuje předdefinovat připojení k databázi v pgAdminu.
 
   backend:
-    build: ./backend
+    build: ./backend #Vytvoří obraz pro backend z Dockerfile umístěného v adresáři ./backend.
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
+      - ./backend:/app #hot reload pro backend, změny v kódu se projeví okamžitě bez nutnosti restartovat kontejner.
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_healthy  #Zajistí, že backend se spustí až po úspěšném(To zajištuje ten condition) spuštění a ověření zdraví databáze.
     env_file:
       - .env
     
   frontend:
-    build: ./frontend
+    build: ./frontend #Vytvoří obraz podobně, jako u backendu, ale pro frontend z Dockerfile umístěného v adresáři ./frontend.
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend:/app #hot reload pro frontend, změny v kódu se projeví okamžitě bez nutnosti restartovat kontejner.
+      - /app/node_modules #Zajistí, že node_modules uvnitř kontejneru nejsou přepsány lokálním adresářem, což je důležité pro správnou funkci závislostí.
     depends_on:
       - backend
     env_file:
@@ -55,4 +55,4 @@ services:
 
 
 volumes:
-  db_data:
+  db_data: #Definuje pojmenovaný svazek "db_data", který je použit pro trvalé uložení dat PostgreSQL. Tento svazek zajišťuje, že data zůstanou zachována i po odstranění kontejneru, což je klíčové pro databáze.

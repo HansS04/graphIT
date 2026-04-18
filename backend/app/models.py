@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, BigInteger, ForeignKey, JSON, DateTime, UniqueConstraint, LargeBinary
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSONB
 from .database import Base
 from datetime import datetime
 
@@ -15,7 +16,7 @@ class DashboardPreset(Base):
     __tablename__ = "dashboard_presets"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)
-    layout = Column(JSON)
+    layout = Column(JSONB)
     created_at = Column(DateTime, default=datetime.utcnow)
     user_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="presets")

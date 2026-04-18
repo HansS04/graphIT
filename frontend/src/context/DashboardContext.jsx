@@ -2,7 +2,6 @@ import React, { createContext, useState, useContext, useEffect, useCallback, use
 
 const DashboardContext = createContext();
 
-// 1. Výchozí rozložení (konstanty)
 const ADMIN_DEFAULT_LAYOUT = [
   { i: 'pump-1', type: 'PUMP_CONTROL', x: 0, y: 0, w: 4, h: 3 },
   { i: 'pgadmin-1', type: 'PG_ADMIN_LINK', x: 4, y: 0, w: 2, h: 3 },
@@ -169,7 +168,6 @@ export const DashboardProvider = ({ children, user }) => {
     }
   };
 
-  // --- EXPORT KONTEXTU ---
 
   const value = {
     widgets, addWidget, removeWidget, updateWidgetData, onDropWidget, onLayoutChange,

@@ -10,8 +10,8 @@ import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
-import UserDashboard from './pages/AdminDashboard';
-import { fetchCurrentUser } from './api';
+import UserDashboard from './pages/UserDashboard';
+import { fetchCurrentUser } from './services/api';
 import Footer from './layouts/Footer';
 
 function App() {
