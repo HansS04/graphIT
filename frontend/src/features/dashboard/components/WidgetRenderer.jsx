@@ -7,6 +7,7 @@ import PumpControlWidget from './PumpControlWidget';
 import PgAdminWidget from './PgAdminWidget';
 import SwaggerWidget from './SwaggerWidget';
 
+// Definice jednoduchých prezentačních komponent pro základní analytické prvky.
 const KPIContent = () => (
   <div className="flex flex-col items-center justify-center h-full text-text-graphit-white">
     <span className="text-graphit-gray-light text-sm uppercase tracking-wider">Celkový Zisk</span>
@@ -18,9 +19,10 @@ const TableContent = () => (
   <div className="w-full h-full overflow-hidden text-center pt-10 text-graphit-gray-light">Tabulka Dat...</div>
 );
 
+// Interaktivní komponenta umožňující lokální výběr tržního symbolu prostřednictvím globálního stavu.
 const ControlContent = () => {
   const { state, updateSymbol } = useDashboardState();
-  const markets = ['BTCEUR', 'ETHEUR', 'SOLUSD'];
+  const markets = ['BTCEUR', 'ETHEUR']; // Dynamický seznam trhů pro výběr (může být rozšířen o další páry)
   return (
     <div className="flex flex-col items-center justify-center h-full gap-4">
       <h4 className="text-text-graphit-white text-sm font-bold uppercase tracking-wider">Vyberte trh</h4>
@@ -39,6 +41,7 @@ const ControlContent = () => {
   );
 };
 
+// Statická mapovací tabulka (slovník) spojující databázové typy (string) s React komponentami.
 const WIDGET_COMPONENTS = {
   'CHART': SmartChartWidget,
   'PREDICTION': PredictionWidget,
@@ -50,13 +53,17 @@ const WIDGET_COMPONENTS = {
   'CONTROLS': ControlContent
 };
 
+// Centrální tovární komponenta pro dynamické vykreslení obsahu na základě dodaného typu.
 const WidgetRenderer = (props) => {
+  // Normalizace vstupních dat – sjednocení parametrů předaných přímo nebo uvnitř vnořeného objektu.
   const type = props.type || props.widget?.type;
   const data = props.data || props.widget?.data || {};
   const id = props.id || props.widget?.i || props.widget?.id;
 
+  // Vyhledání referenční komponenty v mapovací tabulce.
   const ComponentToRender = WIDGET_COMPONENTS[type];
 
+  // Ochranná (fallback) větev pro případ, že požadovaný typ komponenty neexistuje.
   if (!ComponentToRender) {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center text-graphit-gray-light bg-graphit-gray-dark/50 rounded p-4 text-center">
@@ -68,6 +75,7 @@ const WidgetRenderer = (props) => {
     );
   }
 
+  // Instanciace a navrácení úspěšně nalezené komponenty s přiřazenými datovými parametry.
   return <ComponentToRender id={id} symbol={data.symbol || 'BTCEUR'} data={data} />;
 };
 

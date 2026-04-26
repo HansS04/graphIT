@@ -2,20 +2,27 @@ import React, { useState, useMemo } from 'react';
 import SidebarItem from './SidebarItem';
 import { getWidgetCategories } from '../features/dashboard/components/WidgetConfig';
 
+// Hlavní komponenta bočního panelu zajišťující kategorizovaný přístup k widgetům.
 function Sidebar({ user }) {
+  // Memoizovaná filtrace kategorií na základě oprávnění přihlášeného uživatele.
   const categories = useMemo(() => getWidgetCategories(user?.role), [user?.role]);
+  
+  // Lokální stav pro sledování aktuálně vybrané a zobrazené kategorie.
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id || null);
   
+  // Přepíná viditelnost sekundárního panelu. Pokud je kategorie již aktivní, dojde k jejímu zavření.
   const toggleCategory = (id) => { 
     setActiveCategory(prev => prev === id ? null : id); 
   };
   
+  // Vyhledání objektu aktivní kategorie pro vykreslení jejího obsahu.
   const currentCategory = categories.find(c => c.id === activeCategory);
   const currentItems = currentCategory?.items || [];
 
   return (
     <div className="flex h-full shadow-xl z-30 relative">
       
+      {/* Primární lišta ikon: Zajišťuje přepínání mezi hlavními funkčními bloky. */}
       <div className="w-20 h-full bg-graphit-dark-blue flex flex-col items-center py-6 gap-6 border-r border-graphit-gray-dark z-40">
         {categories.map((cat) => (
           <button 
@@ -30,6 +37,7 @@ function Sidebar({ user }) {
           >
             {cat.icon}
             
+            {/* Kontextová nápověda (tooltip) zobrazená při najetí myší nad ikonu. */}
             <span className="absolute left-14 bg-graphit-dark-blue text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-graphit-gray-dark z-50">
               {cat.label}
             </span>
@@ -37,6 +45,7 @@ function Sidebar({ user }) {
         ))}
       </div>
 
+      {/* Sekundární výsuvný panel: Zobrazuje seznam konkrétních nástrojů zvolené kategorie. */}
       <div 
         className={`h-full bg-graphit-gray border-r border-graphit-gray-dark overflow-hidden transition-all duration-300 ease-in-out flex flex-col ${
           activeCategory ? 'w-64 opacity-100' : 'w-0 opacity-0'
@@ -47,6 +56,7 @@ function Sidebar({ user }) {
             {currentCategory?.label || 'Menu'}
           </h2>
           
+          {/* Iterace přes jednotlivé položky (widgety) v dané kategorii. */}
           <div className="flex flex-col gap-3">
             {currentItems.map((item) => (
               <SidebarItem 
@@ -58,6 +68,7 @@ function Sidebar({ user }) {
             ))}
           </div>
           
+          {/* Fallback zobrazení pro prázdné kategorie. */}
           {currentItems.length === 0 && activeCategory && (
             <p className="text-sm text-graphit-gray-light italic">Žádné nástroje v této kategorii.</p>
           )}

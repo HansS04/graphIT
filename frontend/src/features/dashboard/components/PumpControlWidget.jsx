@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 
+// Administrační komponenta pro vizualizaci a ovládání procesu synchronizace dat.
 const PumpControlWidget = () => {
+  // Uchovává informace o aktuálním stavu (zda pumpa běží a kdy běžela naposledy).
   const [status, setStatus] = useState({ is_running: false, last_run: null });
+  
+  // Indikátor načítání pro blokování tlačítka během odesílání síťového požadavku.
   const [loading, setLoading] = useState(false);
 
+  // Asynchronně dotazuje backendové API na aktuální stav procesu datové pumpy.
   const checkStatus = async () => {
     try {
       const token = localStorage.getItem('access_token');
@@ -18,6 +23,7 @@ const PumpControlWidget = () => {
     }
   };
 
+  // Odesílá autorizovaný POST požadavek na server pro zahájení stahování dat.
   const handleStartPump = async () => {
     setLoading(true);
     try {
@@ -38,6 +44,8 @@ const PumpControlWidget = () => {
     }
   };
 
+  // Řídí životní cyklus komponenty. Při prvním načtení ověří stav. 
+  // Pokud pumpa běží, spouští pravidelné dotazování (polling) každých 5 sekund.
   useEffect(() => {
     checkStatus();
 
@@ -45,11 +53,14 @@ const PumpControlWidget = () => {
     if (status.is_running) {
       interval = setInterval(checkStatus, 5000);
     }
+    // Úklidová funkce (cleanup) zabraňující úniku paměti při odpojení komponenty.
     return () => clearInterval(interval);
   }, [status.is_running]);
 
   return (
     <div className="p-4 h-full flex flex-col justify-between bg-graphit-gray/40 rounded-xl border border-gray-700/50">
+      
+      {/* Hlavička widgetu s dynamickým zobrazením ikony podle stavu. */}
       <div className="flex justify-between items-start">
         <div>
           <h3 className="text-white font-bold text-sm">Datová Pumpa</h3>
@@ -62,6 +73,7 @@ const PumpControlWidget = () => {
         )}
       </div>
 
+      {/* Informační sekce zobrazující textový stav a čas posledního běhu. */}
       <div className="my-4">
         <div className="flex items-center gap-3">
           <div className={`w-3 h-3 rounded-full ${status.is_running ? 'bg-emerald-500 animate-ping' : 'bg-gray-600'}`} />
@@ -76,6 +88,7 @@ const PumpControlWidget = () => {
         )}
       </div>
 
+      {/* Akční tlačítko. Je automaticky deaktivováno (disabled), pokud proces již probíhá. */}
       <button
         onClick={handleStartPump}
         disabled={status.is_running || loading}

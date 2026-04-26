@@ -13,7 +13,12 @@ import {
   FileCode
 } from 'lucide-react';
 
+// Tovární funkce pro dynamické vygenerování stromové struktury dostupných widgetů.
+// Parametr 'userRole' určuje rozsah oprávnění pro přístup ke specifickým nástrojům.
 export const getWidgetCategories = (userRole) => {
+  
+  // Definice základního pole kategorií a jejich vnitřních položek. 
+  // Tato sada je implicitně dostupná všem uživatelům platformy.
   const baseCategories = [
     {
       id: 'analytika',
@@ -43,6 +48,7 @@ export const getWidgetCategories = (userRole) => {
     }
   ];
 
+  // Podmíněné rozšíření nabídky pro administrátorské účty (RBAC logika).
   if (userRole === 'admin') {
     baseCategories.push({
       id: 'admin',
@@ -56,5 +62,6 @@ export const getWidgetCategories = (userRole) => {
     });
   }
 
+  // Návrat finální, kontextuálně upravené datové struktury pro vykreslení v postranním panelu.
   return baseCategories;
 };

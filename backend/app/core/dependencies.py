@@ -14,7 +14,6 @@ def get_db():
         db.close()
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    # ZDE BYLA CHYBA: Voláme security místo auth
     payload = security.decode_access_token(token)
     if not payload:
         raise HTTPException(status_code=401, detail="Invalid token")

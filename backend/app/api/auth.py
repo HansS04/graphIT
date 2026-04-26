@@ -8,6 +8,7 @@ from ..core.dependencies import get_db
 
 router = APIRouter()
 
+# API endpoint pro registraci nového uživatele. Tento endpoint přijímá data o novém uživateli, kontroluje, zda již neexistuje uživatel se stejným emailem, a pokud ne, vytvoří nového uživatele s hashovaným heslem a uloží ho do databáze.
 @router.post("/register", response_model=schemas.UserInDB)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
@@ -20,6 +21,7 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.refresh(db_user)
     return db_user
 
+# API endpoint pro přihlášení uživatele. Tento endpoint přijímá přihlašovací údaje, ověřuje je proti databázi, a pokud jsou správné, generuje a vrací JWT token pro autentizaci v dalších požadavcích.
 @router.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == form_data.username).first()

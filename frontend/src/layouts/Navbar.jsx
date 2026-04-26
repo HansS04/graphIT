@@ -3,11 +3,16 @@ import { useDashboardState } from '../context/DashboardContext';
 import { Link } from 'react-router-dom';
 import logo from '../assets/graphIT_logo.png';
 
+// Hlavní navigační komponenta s integrovanou správou uživatelských předvoleb (presetů).
 const Navbar = ({ user, onLogout }) => {
+  // Napojení na centrální úložiště stavu analytické mřížky.
   const dashboardContext = useDashboardState();
+  
+  // Lokální stav pro řízení fází ukládacího procesu ('NONE', 'DECIDE', 'AS_NEW').
   const [saveMode, setSaveMode] = useState('NONE');
   const [newPresetName, setNewPresetName] = useState("");
 
+  // Iniciační funkce pro proces ukládání. Vyhodnocuje, zda je aktivní existující preset.
   const handleSaveClick = () => {
     if (dashboardContext.currentPresetId) {
       setSaveMode('DECIDE');
@@ -16,6 +21,7 @@ const Navbar = ({ user, onLogout }) => {
     }
   };
 
+  // Asynchronní volání kontextu pro uložení zcela nového rozložení do databáze.
   const performSaveAsNew = async () => {
     if (newPresetName.trim()) {
       await dashboardContext.saveAsNewPreset(newPresetName);
@@ -24,6 +30,7 @@ const Navbar = ({ user, onLogout }) => {
     }
   };
 
+  // Asynchronní přepis (aktualizace) aktuálně vybraného a načteného rozložení.
   const performUpdate = async () => {
     await dashboardContext.updateCurrentPreset();
     setSaveMode('NONE');
@@ -32,6 +39,7 @@ const Navbar = ({ user, onLogout }) => {
   return (
     <nav className="bg-graphit-dark-blue border-b border-graphit-gray-dark px-6 py-4 flex justify-between items-center shadow-md z-50">
       
+      {/* Levá sekce: Logotyp a odkaz na domovskou stránku. */}
       <Link to="/" className="flex items-center gap-3">
         <img src={logo} alt="GraphIT Logo" className="h-10 w-auto" />
         <span className="text-2xl font-bold text-text-graphit-white tracking-tight">
@@ -41,9 +49,11 @@ const Navbar = ({ user, onLogout }) => {
 
       <div className="flex items-center gap-6">
         
+        {/* Prostřední sekce: Ovládání nástěnky (vykresleno pouze pro přihlášené uživatele v kontextu nástěnky). */}
         {user && dashboardContext && (
           <div className="flex items-center gap-3 mr-4 border-r border-graphit-gray pr-6">
             
+            {/* Tlačítko pro uzamčení/odemčení rozložení mřížky. */}
             <button 
               onClick={dashboardContext.toggleLock} 
               title={dashboardContext.isLocked ? "Odemknout" : "Zamknout"}
@@ -63,6 +73,7 @@ const Navbar = ({ user, onLogout }) => {
 
             <div className="h-6 w-[1px] bg-graphit-gray-dark mx-2"></div>
 
+            {/* Rozbalovací menu pro načtení existujících uživatelských rozložení. */}
             <select 
               onChange={(e) => dashboardContext.loadPreset(e.target.value)} 
               value={dashboardContext.currentPresetId || 'new'}
@@ -74,10 +85,12 @@ const Navbar = ({ user, onLogout }) => {
               ))}
             </select>
 
+            {/* Vizuální indikátor detekující odlišnosti mezi aktuálním stavem a databází. */}
             {dashboardContext.hasUnsavedChanges && (
               <span className="w-2 h-2 rounded-full bg-graphit-yellow" title="Neuložené změny"></span>
             )}
 
+            {/* Dynamická sekce pro ukládání: Výchozí stav (tlačítko Uložit). */}
             {saveMode === 'NONE' && (
               <button 
                 onClick={handleSaveClick} 
@@ -91,6 +104,7 @@ const Navbar = ({ user, onLogout }) => {
               </button>
             )}
 
+            {/* Dynamická sekce pro ukládání: Fáze rozhodování u existujícího rozložení. */}
             {saveMode === 'DECIDE' && (
               <div className="flex gap-2 animate-in fade-in zoom-in duration-200">
                 <button onClick={performUpdate} className="bg-graphit-turquoise text-white text-xs px-3 py-2 rounded hover:bg-green-600">Aktualizovat</button>
@@ -99,6 +113,7 @@ const Navbar = ({ user, onLogout }) => {
               </div>
             )}
 
+            {/* Dynamická sekce pro ukládání: Fáze zadávání názvu pro nové rozložení. */}
             {saveMode === 'AS_NEW' && (
               <div className="flex gap-2 animate-in fade-in zoom-in duration-200">
                 <input 
@@ -114,6 +129,7 @@ const Navbar = ({ user, onLogout }) => {
               </div>
             )}
 
+            {/* Ochranná podmínka vykreslující tlačítko pro smazání pouze u uložených rozložení. */}
             {dashboardContext.currentPresetId && saveMode === 'NONE' && (
               <button 
                 onClick={() => dashboardContext.deletePreset(dashboardContext.currentPresetId)} 
@@ -126,6 +142,7 @@ const Navbar = ({ user, onLogout }) => {
           </div>
         )}
         
+        {/* Pravá sekce: Informace o uživateli a autentizační prvky (Login / Logout). */}
         <div className="flex items-center gap-4">
           <span className="text-graphit-gray-light text-sm hidden md:inline">
             {user ? user.email : 'Host'}

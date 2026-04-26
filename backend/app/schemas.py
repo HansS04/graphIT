@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import List, Optional, Any, Dict
 from datetime import datetime
 
+# Definice Pydantic modelů pro FastAPI
+# Tyto modely slouží pro validaci a serializaci dat, která jsou přijímána a odesílána API. Jsou navrženy tak, aby odpovídaly struktuře našich databázových modelů a požadavkům naší aplikace.
 class UserBase(BaseModel):
     email: str
     role: str = "user"

@@ -1,7 +1,9 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 
+// Inicializace kontextu pro sdílení stavu napříč DOM stromem.
 const DashboardContext = createContext();
 
+// Definice výchozích rozložení na základě uživatelských rolí.
 const ADMIN_DEFAULT_LAYOUT = [
   { i: 'pump-1', type: 'PUMP_CONTROL', x: 0, y: 0, w: 4, h: 3 },
   { i: 'pgadmin-1', type: 'PG_ADMIN_LINK', x: 4, y: 0, w: 2, h: 3 },
@@ -16,12 +18,11 @@ const USER_DEFAULT_LAYOUT = [
 
 export const DashboardProvider = ({ children, user }) => {
   
-  
+  // Inicializace stavu rozložení s prioritou: 1. Lokální úložiště, 2. Výchozí nastavení dle role.
   const [widgets, setWidgets] = useState(() => {
     const role = user?.role || 'user';
     const saved = localStorage.getItem(`dashboard_layout_${role}`);
     if (saved) return JSON.parse(saved);
-    
     return role === 'admin' ? ADMIN_DEFAULT_LAYOUT : USER_DEFAULT_LAYOUT;
   });
 
@@ -30,21 +31,23 @@ export const DashboardProvider = ({ children, user }) => {
   const [currentPresetId, setCurrentPresetId] = useState(null);
   const [isLocked, setIsLocked] = useState(false);
   
+  // Načtení posledního sledovaného symbolu z lokálního úložiště.
   const [symbol, setSymbol] = useState(() => {
     return localStorage.getItem('graphit_last_symbol') || 'BTCEUR';
   });
 
-
+  // Automatická synchronizace aktuálního rozložení do lokálního úložiště prohlížeče.
   useEffect(() => {
     const role = user?.role || 'user';
     localStorage.setItem(`dashboard_layout_${role}`, JSON.stringify(widgets));
   }, [widgets, user]);
 
+  // Prvotní stažení uložených uživatelských předvoleb z API.
   useEffect(() => { 
     fetchPresets(); 
   }, []);
 
-
+  // Výpočet indikátoru neuložených změn porovnáním aktuálního a původního stavu.
   const hasUnsavedChanges = useMemo(() => {
     if (!currentPresetId) return widgets.length > 0;
     return JSON.stringify(widgets) !== JSON.stringify(originalWidgets);
@@ -52,6 +55,7 @@ export const DashboardProvider = ({ children, user }) => {
 
   const toggleLock = () => setIsLocked(prev => !prev);
 
+  // Aktualizuje globální tržní symbol a propaguje jej do relevantních widgetů.
   const updateSymbol = (newSymbol) => {
     setSymbol(newSymbol);
     localStorage.setItem('graphit_last_symbol', newSymbol);
@@ -60,6 +64,7 @@ export const DashboardProvider = ({ children, user }) => {
     ));
   };
 
+  // Přidá nový widget do rozložení na nejbližší volnou pozici (y = Infinity).
   const addWidget = (type) => {
     const newItem = { 
       i: Date.now().toString(),
@@ -71,12 +76,15 @@ export const DashboardProvider = ({ children, user }) => {
     setWidgets(prev => [...prev, newItem]);
   };
 
+  // Odstraní widget z mřížky na základě jeho identifikátoru.
   const removeWidget = (id) => setWidgets(prev => prev.filter(w => w.i !== id));
 
+  // Aktualizuje specifická vnitřní data konkrétního widgetu.
   const updateWidgetData = (id, newData) => {
     setWidgets(prev => prev.map(w => w.i === id ? { ...w, data: { ...w.data, ...newData } } : w));
   };
 
+  // Zpracuje událost přetažení nového widgetu na specifické souřadnice.
   const onDropWidget = (type, x, y) => {
     const newItem = { 
       i: Date.now().toString(), 
@@ -87,6 +95,7 @@ export const DashboardProvider = ({ children, user }) => {
     setWidgets(prev => [...prev, newItem]);
   };
 
+  // Zaznamená změny polohy a velikosti prvků vyvolané uživatelskou interakcí.
   const onLayoutChange = (newLayout) => {
     setWidgets(prev => prev.map(widget => {
       const updated = newLayout.find(item => item.i === widget.i);
@@ -94,12 +103,13 @@ export const DashboardProvider = ({ children, user }) => {
     }));
   };
 
-
+  // Generuje HTTP hlavičky s platným autentizačním tokenem.
   const getHeaders = () => ({
     'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
     'Content-Type': 'application/json'
   });
 
+  // Blok asynchronních metod pro komunikaci s REST API (CRUD operace nad presety).
   const fetchPresets = async () => {
     const token = localStorage.getItem('access_token');
     if (!token) return;
@@ -153,6 +163,7 @@ export const DashboardProvider = ({ children, user }) => {
     } catch (err) { alert("Nepodařilo se smazat rozložení."); }
   };
 
+  // Načte vybrané rozložení do aktivního stavu nebo vyčistí mřížku pro nové rozložení.
   const loadPreset = (presetId) => {
     if (presetId === 'new') {
       setWidgets([]);
@@ -168,7 +179,7 @@ export const DashboardProvider = ({ children, user }) => {
     }
   };
 
-
+  // Export dostupných hodnot a metod konzumentům kontextu.
   const value = {
     widgets, addWidget, removeWidget, updateWidgetData, onDropWidget, onLayoutChange,
     state: { symbol }, updateSymbol,
@@ -183,4 +194,5 @@ export const DashboardProvider = ({ children, user }) => {
   );
 };
 
+// Pomocný hook pro zjednodušenou konzumaci kontextu v komponentách.
 export const useDashboardState = () => useContext(DashboardContext);

@@ -6,6 +6,7 @@ from ..core.dependencies import get_db, get_current_user
 
 router = APIRouter()
 
+# Vytvoří a uloží nové uživatelské rozložení (preset) do databáze.
 @router.post("/", response_model=schemas.Preset)
 def create_preset(preset: schemas.PresetCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     db_preset = models.DashboardPreset(name=preset.name, layout=preset.layout, user_id=current_user.id)
@@ -14,6 +15,7 @@ def create_preset(preset: schemas.PresetCreate, db: Session = Depends(get_db), c
     db.refresh(db_preset)
     return db_preset
 
+# Aktualizuje existující rozložení. Zajišťuje, že uživatel může upravovat pouze své vlastní záznamy.
 @router.put("/{preset_id}", response_model=schemas.Preset)
 def update_preset(preset_id: int, preset: schemas.PresetCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     db_preset = db.query(models.DashboardPreset).filter(models.DashboardPreset.id == preset_id, models.DashboardPreset.user_id == current_user.id).first()
@@ -25,10 +27,12 @@ def update_preset(preset_id: int, preset: schemas.PresetCreate, db: Session = De
     db.refresh(db_preset)
     return db_preset
 
+# Načte všechna uložená rozložení, která patří aktuálně přihlášenému uživateli.
 @router.get("/", response_model=List[schemas.Preset])
 def get_presets(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     return db.query(models.DashboardPreset).filter(models.DashboardPreset.user_id == current_user.id).all()
 
+# Vymaže vybrané rozložení z databáze po ověření, že patří přihlášenému uživateli.
 @router.delete("/{preset_id}")
 def delete_preset(preset_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     preset = db.query(models.DashboardPreset).filter(models.DashboardPreset.id == preset_id, models.DashboardPreset.user_id == current_user.id).first()

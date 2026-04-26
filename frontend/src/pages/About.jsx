@@ -7,7 +7,7 @@ const About = () => {
         O aplikaci GraphIT
       </h1>
       <p className="text-lg max-w-xl mx-auto text-gray-800">
-        GraphIT je inovativní platforma navržená pro bakalářskou práci, která se zaměřuje na simulaci procesů a vizualizaci dat. Naším cílem je poskytnout uživatelům intuitivní nástroj pro analýzu a interpretaci složitých datových sad.
+        GraphIT je inovativní platforma navržená pro bakalářskou práci, která se zaměřuje na simulaci procesů a vizualizaci dat. Mým cílem je poskytnout uživatelům intuitivní nástroj pro analýzu a interpretaci složitých datových sad.
       </p>
     </div>
   );

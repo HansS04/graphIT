@@ -1,5 +1,6 @@
 import React from 'react';
 
+// Jednoduchá komponenta pro zobrazení patičky webové aplikace s aktuálním rokem a autorskými informacemi.
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
